@@ -1,0 +1,10 @@
+{
+    "short_name": "Fragio",
+    "name": "Fragio",
+    "icons": [],
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "landscape",
+    "background_color": "#FFFFFF",
+    "theme_color": "#292F36"
+}

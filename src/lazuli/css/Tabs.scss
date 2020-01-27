@@ -1,0 +1,29 @@
+@import "Helpers.scss";
+
+.lz-tabs {
+  & > div:nth-child(1){
+    overflow-x: auto;
+    display: flex;
+    height: 25px;
+    white-space: nowrap;
+
+    & > div {
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    & > div[data-selected=true] {
+      font-weight: 700;
+    }
+
+    & > div[data-selected=true],
+    & > div:hover {
+      border-bottom: 2px solid $color-fg-primary;
+    }
+
+    & > div:nth-child(2n) {
+      margin: 0 15px;
+    }
+  }
+}

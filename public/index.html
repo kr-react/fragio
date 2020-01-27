@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fragio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#292F36" />
+    <meta name="description" content="Bruh" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="shortcut icon" href="/%PUBLIC_URL%/favicon.ico" />
+    <link rel="manifest" href="/%PUBLIC_URL%/manifest.json" />
+  </head>
+  <body style="margin: 0">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <!-- WebWorkers -->
+    <script>
+      if (window.Worker) {
+        window._worker = new Worker("/%PUBLIC_URL%/worker.js");
+      }
+    </script>
+
+    <!-- Dependencies -->
+    <script src="/%DIST_URL%/modules/react.production.min.js.gz"></script>
+    <script src="/%DIST_URL%/modules/react-dom.production.min.js.gz"></script>
+
+    <!-- Main -->
+    <script src="/%DIST_URL%/main.js.gz"></script>
+  </body>
+</html>
