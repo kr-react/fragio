@@ -51,7 +51,8 @@ module.exports = {
     new Webpack.DefinePlugin({
       'process.env': {
         PORT: JSON.stringify(process.env.PORT),
-        API_URL: JSON.stringify(process.env.API_URL)
+        API_URL: JSON.stringify(process.env.API_URL),
+        APP_NAME: JSON.stringify(process.env.APP_NAME)
       }
     }),
     new CopyPlugin([

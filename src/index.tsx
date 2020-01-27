@@ -1,14 +1,13 @@
 import * as React from "react";
 import { render } from "react-dom";
-import {  } from "react-router";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { createStore,Store } from "redux";
 import { ApplicationState, ReduxAction } from "./common";
 
 // Routes
-import HomeRoute from "./routes/HomeRoute";
-import LoginRoute from "./routes/LoginRoute";
+import HomeRoute from "./routes/HomeRoute/";
+import LoginRoute from "./routes/LoginRoute/";
 
 // Styles
 import "./lazuli/css/lazuli.scss";

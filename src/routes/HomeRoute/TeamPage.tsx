@@ -1,50 +1,32 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Switch, Route } from "react-router-dom";
 import { Link, Redirect, useHistory } from "react-router-dom";
 
 import {
-  ApplicationState,
-  User,
-  Team,
-  Board,
-  List,
-  Card,
-  Label,
-  HistoryEntry,
   FragioAPI,
+  ApplicationState,
+  Team,
+  Member,
 } from "../../common";
 
 import {
-  Avatar,
-  Header,
-  HeaderItem,
   Button,
   ButtonGroup,
-  Tabs,
   Layout,
-  Table,
-  Nav,
-  NavItem,
-  NavSection,
-  NavSeparator,
   Grid,
   Text,
-  SplitView,
-  Dropdown,
-  List as LZList,
 } from "../../lazuli";
 
-function TeamPage(props: { id: string }) {
+export default function TeamPage(props: { id: string }) {
   const api = new FragioAPI(process.env.API_URL, window.localStorage.getItem("token"));
   const history = useHistory();
-  const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
-  const [localState, setLocalState] = React.useState<{
+  const globalState = useSelector<ApplicationState>(state => state);
+  const [localState, setLocalState] = useState<{
     team: Team,
     member: Members[],
   }>(undefined);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function apiRequest() {
       const team = await api.getTeam(props.id);
       const members = await api.getTeamMembers(props.id);
