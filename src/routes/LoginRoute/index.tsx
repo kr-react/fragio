@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { QueryString, FragioAPI } from "../common";
-import { ApplicationState } from "../common";
+import { ApplicationState, QueryString, FragioAPI } from "../../common";
 
 interface LoginFormProps {
   onLogin?: (data: LoginData) => boolean
