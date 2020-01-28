@@ -117,8 +117,8 @@ export default function HomePage() {
           )}
         </NavSection>
       </Nav>
-      <main style={{padding: "20px", backgroundColor: "#fff", overflow: "auto"}}>
-        <Tabs defaultIndex={0}>
+      <main className="overflow-y-auto p20 color-secondary">
+        <Tabs defaultIndex={1}>
           {[
             {
               name: "My Boards",
@@ -131,7 +131,7 @@ export default function HomePage() {
                     fields: {
                       name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
                       lastOpen: entry ? new Date(entry.createdAt).toLocaleString() : "Never",
-                      team: board.team ? board.team.name : "None",
+                      team: board.team ? <Link to={`/team/${board.team.id}`}>{board.team.name}</Link> : "None",
                       owner: board.owner.name,
                       avatar: (
                         <Avatar src={board.owner.imageUrl} style={{
@@ -178,7 +178,7 @@ export default function HomePage() {
                     fields: {
                       name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
                       lastOpen: date.toLocaleString(),
-                      team: board.team ? board.team.name : "None",
+                      team: board.team ? <Link to={`/team/${board.team.id}`}>{board.team.name}</Link> : "None",
                       owner: board.owner.name,
                       avatar: (
                         <Avatar src={board.owner.imageUrl} style={{

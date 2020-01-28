@@ -252,9 +252,23 @@ export class FragioAPI {
     });
   }
 
+  async getTeamBoards(teamId: string) : Promise<Board[]> {
+    return this.request(`api/v1/team/${teamId}/boards`, {
+      method: "GET",
+      useToken: true,
+    });
+  }
+
   async joinTeam(teamId: string, username: string) : Promise<Member> {
     return this.request(`api/v1/team/${teamId}/members/${username}`, {
       method: "PUT",
+      useToken: true,
+    });
+  }
+
+  async leaveTeam(teamId: string, username: string) : Promise<void> {
+    return this.request(`api/v1/team/${teamId}/members/${username}`, {
+      method: "DELETE",
       useToken: true,
     });
   }
