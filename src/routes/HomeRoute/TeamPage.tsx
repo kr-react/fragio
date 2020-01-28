@@ -58,6 +58,15 @@ export default function TeamPage(props: { id: string }) {
     return <div>Not Found</div>;
   }
 
+  function removeMember(username: string) {
+    api.leaveTeam(localState.team.id, username).then(() => {
+      setLocalState({
+        ...localState,
+        members: localState.members.filter(member => member.user.username != username)
+      });
+    });
+  }
+
   return (
     <Grid rows={["53px", "auto"]}>
       <Layout className="border-bottom flex-row flex-align-center flex-justify-between overflow-x-auto"
@@ -66,15 +75,7 @@ export default function TeamPage(props: { id: string }) {
           style={{marginRight: "10px"}}/>
         <ButtonGroup className="self-flex-end" type="space-between">
           {(globalState.user && localState.members.some(m => m.userId == globalState.user.id)) &&
-            <Button type="primary" text="Leave" onClick={() => {
-              api.leaveTeam(localState.team.id, globalState.user.username)
-                .then(() => {
-                  setLocalState({
-                    ...localState,
-                    members: localState.members.filter(member => member.userId != globalState.user.id)
-                  });
-                });
-            }}/>
+            <Button type="primary" text="Leave" onClick={() => removeMember(globalState.user.username)}/>
           }
           <Button type="primary" text="Delete" onClick={() => {
             api.deleteTeam(localState.team.id)
@@ -112,16 +113,22 @@ export default function TeamPage(props: { id: string }) {
                 })}
                 columns={[
                   {
-                    title: "Name",
-                    field: "name"
+                    title: "",
+                    field: "avatar",
+                    style: {
+                      width: 0
+                    }
                   },
                   {
                     title: "Owner",
-                    field: "owner"
+                    field: "owner",
+                    style: {
+                      width: 0
+                    }
                   },
                   {
-                    title: "",
-                    field: "avatar"
+                    title: "Name",
+                    field: "name",
                   }
                 ]}/>
               )
@@ -129,51 +136,70 @@ export default function TeamPage(props: { id: string }) {
             {
               name: "Members",
               component: (
-                <Table sources={localState.members.map(member => {
-                  return {
-                    key: member.id,
-                    unselectable: false,
-                    fields: {
-                      avatar: (
-                        <Avatar src={member.user.imageUrl} style={{
-                          width: "25px",
-                          height: "25px"
-                        }}/>
-                      ),
-                      name: member.user.name,
+                <React.Fragment>
+                  <Table sources={localState.members.map(member => {
+                    return {
+                      key: member.id,
+                      unselectable: false,
+                      fields: {
+                        avatar: (
+                          <Avatar src={member.user.imageUrl} style={{
+                            width: "25px",
+                            height: "25px"
+                          }}/>
+                        ),
+                        name: member.user.name,
+                        remove: globalState.user && globalState.user.id == localState.team.ownerId ? (
+                          <Button type="primary" text="Remove"
+                            onClick={() => removeMember(member.user.username)}/>
+                        ) : undefined
+                      }
+                    };
+                  })}
+                  columns={[
+                    {
+                      title: "",
+                      field: "avatar",
+                      style: {
+                        width: 0
+                      }
+                    },
+                    {
+                      title: "Name",
+                      field: "name",
+                      style: {
+                        width: 0
+                      }
+                    },
+                    {
+                      title: "",
+                      field: "remove",
+                      style: {
+                        textAlign: "right"
+                      }
                     }
-                  };
-                })}
-                columns={[
-                  {
-                    title: "",
-                    field: "avatar"
-                  },
-                  {
-                    title: "Name",
-                    field: "name"
-                  },
-                ]}/>
+                  ]}/>
+                  {globalState.user &&
+                    <form enctype="multipart/form-data" onSubmit={e => {
+                      e.preventDefault();
+                      const data = new FormData(e.currentTarget)
+                      api.joinTeam(localState.team.id, data.get("username"))
+                        .then(member => {
+                          setLocalState({
+                            ...localState,
+                            members: localState.members.concat([member])
+                          });
+                        });
+                    }}>
+                      <input name="username" aria-label="username" type="text"/>
+                      <input type="submit" value="Invite"/>
+                    </form>
+                  }
+                </React.Fragment>
               )
             },
           ]}
         </Tabs>
-        {globalState.user &&
-          <form enctype="multipart/form-data" onSubmit={e => {
-            e.preventDefault();
-            const data = new FormData(e.currentTarget)
-            api.joinTeam(localState.team.id, data.get("username"))
-              .then(member => {
-                setLocalState({
-                  ...localState,
-                  members: localState.members.concat([member])
-                });
-              });
-          }}>
-            <input name="username" aria-label="username" type="text"/>
-            <input type="submit" value="Invite"/>
-          </form>
-        }
       </main>
     </Grid>
   );

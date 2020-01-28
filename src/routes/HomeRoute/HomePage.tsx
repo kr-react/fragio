@@ -127,7 +127,6 @@ export default function HomePage() {
                   const entry = localState.history.find(h => h.boardId == board.id);
                   return {
                     key: board.id,
-                    unselectable: false,
                     fields: {
                       name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
                       lastOpen: entry ? new Date(entry.createdAt).toLocaleString() : "Never",
@@ -144,25 +143,25 @@ export default function HomePage() {
                 })}
                 columns={[
                   {
-                    title: "Name",
-                    field: "name"
-                  },
-                  {
-                    title: "Last open by you",
-                    field: "lastOpen"
-                  },
-                  {
-                    title: "Team",
-                    field: "team"
+                    title: "",
+                    field: "avatar"
                   },
                   {
                     title: "Owner",
                     field: "owner"
                   },
                   {
-                    title: "",
-                    field: "avatar"
-                  }
+                    title: "Name",
+                    field: "name"
+                  },
+                  {
+                    title: "Team",
+                    field: "team"
+                  },
+                  {
+                    title: "Last open by you",
+                    field: "lastOpen"
+                  },
                 ]}/>
               )
             },
@@ -174,7 +173,6 @@ export default function HomePage() {
                   const date = new Date(createdAt);
                   return {
                     key: board.id,
-                    unselectable: false,
                     fields: {
                       name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
                       lastOpen: date.toLocaleString(),
@@ -191,25 +189,25 @@ export default function HomePage() {
                 })}
                 columns={[
                   {
-                    title: "Name",
-                    field: "name"
-                  },
-                  {
-                    title: "Last open by you",
-                    field: "lastOpen"
-                  },
-                  {
-                    title: "Team",
-                    field: "team"
+                    title: "",
+                    field: "avatar",
                   },
                   {
                     title: "Owner",
                     field: "owner"
                   },
                   {
-                    title: "",
-                    field: "avatar"
-                  }
+                    title: "Name",
+                    field: "name"
+                  },
+                  {
+                    title: "Team",
+                    field: "team"
+                  },
+                  {
+                    title: "Last open by you",
+                    field: "lastOpen"
+                  },
                 ]}/>
               )
             },

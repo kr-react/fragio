@@ -10,6 +10,7 @@ interface TableSource {
 interface TableColumn {
   title: string;
   field: string;
+  footer?: React.ReactNode;
   style: React.CSSProperties;
 }
 
@@ -17,12 +18,12 @@ interface TableProps extends LazuliBaseCSSProperties {
   sources: TableSource[];
   columns: TableColumn[];
   selectable?: boolean;
-  onSelectionChange?: (indexes: number[]) => void
+  onSelectionChange?: (indexes: number[]) => void;
 }
 
 export default function Table(props: TableProps) {
   const [selectedIndexes, setSelectedIndexes] = React.useState<number[]>([]);
-  const selectablesCount = props.sources.filter(src => !src.unselectable).length;
+  const selectablesCount = props.sources.filter(src => src.selectable).length;
 
   const classes: string[] = [
     "lz-table"
@@ -36,7 +37,7 @@ export default function Table(props: TableProps) {
     <div className={classes.join(' ')} style={props.style}>
       <table>
         <colgroup>
-          {props.columns.map(() => <col/>)}
+          {props.columns.map(column => <col/>)}
         </colgroup>
         <thead>
           <tr>
@@ -47,7 +48,7 @@ export default function Table(props: TableProps) {
                   onChange={e => {
                     const target = e.currentTarget;
                     if (target.checked) {
-                      const indexes = props.sources.filter(src => !src.unselectable)
+                      const indexes = props.sources.filter(src => src.selectable)
                         .map((_, index) => index);
                       if (props.onSelectionChange) props.onSelectionChange(indexes);
                       setSelectedIndexes(indexes);
@@ -63,13 +64,13 @@ export default function Table(props: TableProps) {
         </thead>
         <tbody>
           {props.sources.map((src, index) => {
-            let renderables: JSX.Element[] = [];
+            let renderables = new Array<JSX.Element>(props.columns.length + 1);
 
             if (props.selectable) {
               renderables.push(
                 <td>
                   <input type="checkbox" checked={selectedIndexes.includes(index)}
-                    disabled={src.unselectable}
+                    disabled={!src.selectable}
                     onChange={e => {
                       const target = e.currentTarget;
                       if (target.checked) {
@@ -94,6 +95,14 @@ export default function Table(props: TableProps) {
             return <tr key={src.key}>{renderables}</tr>;
           })}
         </tbody>
+        {props.columns.some(column => column.footer) &&
+          <tfoot>
+            <tr>
+              {props.selectable && <th></th>}
+              {props.columns.map(column => <th>{column.footer || ""}</th>)}
+            </tr>
+          </tfoot>
+        }
       </table>
     </div>
   );
