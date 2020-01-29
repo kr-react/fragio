@@ -33,6 +33,7 @@ export default function BoardPage(props: { id: string }) {
     board: Board,
     lists: List[],
     cards: Card[],
+    teams: Team[],
     isPaneOpen: boolean,
     selectedCard: number
   }>(undefined);
@@ -42,12 +43,14 @@ export default function BoardPage(props: { id: string }) {
       const board = await api.getBoard(props.id);
       const lists = await api.getLists(props.id);
       const cards = await api.getCards(props.id);
+      const teams = await api.getTeamsFromUser(globalState.user.username);
 
       if (board && lists && cards) {
         setLocalState({
           board,
           lists,
           cards,
+          teams,
           isPaneOpen: false
         });
         document.title = `${board.name} - ${process.env.APP_NAME}`
@@ -432,13 +435,26 @@ export default function BoardPage(props: { id: string }) {
                       />
                     ),
                     color: (
-                      <div className="pointer"
-                        style={{
-                          backgroundColor: `#${label.color.toString(16)}`,
-                          padding: "5px",
-                          borderRadius: "5px"
-                        }}
-                      />
+                      <input type="color"
+                        defaultValue={`#${label.color.toString(16)}`}
+                        onFocus={e => {
+                          const value = parseInt(e.currentTarget.value.substr(1), 16);
+                          if (value == label.color) return;
+
+                          api.updateLabel(localState.board.id, label.id, {
+                            color: value
+                          }).then(l => {
+                            const labels = [...localState.board.labels];
+                            labels[index] = l;
+                            setLocalState({
+                              ...localState,
+                              board: {
+                                ...localState.board,
+                                labels
+                              }
+                            });
+                          });
+                        }}/>
                     ),
                     delete: (
                       <Button text="Delete"
@@ -499,6 +515,27 @@ export default function BoardPage(props: { id: string }) {
                 history.push("/");
               }
             })}/>
+            {localState.board.ownerId == globalState.user.id &&
+              <select onChange={e => {
+                const value = e.currentTarget.value;
+                api.updateBoard(localState.board.id, {
+                  teamId: value == 0 ? null : value
+                }).then(board => {
+                    setLocalState({
+                      ...localState,
+                      board
+                    });
+                });
+              }}>
+                <option selected={!localState.board.team} value={0}>None</option>
+                {localState.teams.map(team =>
+                  <option selected={localState.board.team && team.id == localState.board.team.id}
+                    value={team.id}>
+                    {team.name}
+                  </option>
+                )}
+              </select>
+            }
           </div>
         }>
         {localState.selectedCard != null &&
