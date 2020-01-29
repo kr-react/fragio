@@ -519,6 +519,22 @@ export default function BoardPage(props: { id: string }) {
               <select onChange={e => {
                 const value = e.currentTarget.value;
                 api.updateBoard(localState.board.id, {
+                  isPrivate: value == 1 ? true : false
+                }).then(board => {
+                    setLocalState({
+                      ...localState,
+                      board
+                    });
+                });
+              }}>
+                <option selected={!localState.board.isPrivate} value={0}>Public</option>
+                <option selected={localState.board.isPrivate} value={1}>Private</option>
+              </select>
+            }
+            {localState.board.ownerId == globalState.user.id &&
+              <select onChange={e => {
+                const value = e.currentTarget.value;
+                api.updateBoard(localState.board.id, {
                   teamId: value == 0 ? null : value
                 }).then(board => {
                     setLocalState({

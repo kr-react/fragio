@@ -38,6 +38,10 @@ class FileManager {
             }
           }
 
+          fs.watch(filepath, () => {
+            this.find(filepath).content = Buffer.from(fs.readFileSync(filepath));
+          });
+
           this.files.push({
             path: filepath,
             content: Buffer.from(fs.readFileSync(filepath)),
@@ -51,6 +55,10 @@ class FileManager {
 
   find(path) {
     return this.files.find(f => f.path == path);
+  }
+
+  remove(path) {
+    return this.files.filter(f => f.path != path);
   }
 }
 
