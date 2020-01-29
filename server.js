@@ -7,9 +7,51 @@ require("dotenv").config();
 const PUBLIC_PATH = "./public";
 const DIST_PATH = "./dist";
 
-function log(level, message) {
-  const now = new Date(Date.now());
-  console.log(`[${now.toLocaleString()}] [${level}] ${message}`);
+class FileManager {
+  constructor(config) {
+    this.files = [];
+
+    for (const dir of config.dirs) {
+      const paths = fs.readdirSync(dir, {
+        withFileTypes: true
+      });
+
+      for (const dirent of paths) {
+        if (!dirent.isFile()) continue;
+
+        const filepath = `${dir}/${dirent.name}`;
+
+        // TODO: Find better way to get mimetype and encoding
+        exec(`mimetype ${filepath} | awk '{print $2}'`, (err, out) => {
+          let mimetype = out.substr(0, out.length - 1);
+          let encoding = "identity";
+
+          if (filepath.endsWith(".gz")) {
+            encoding = "gzip";
+          } else if (filepath.endsWith(".br")) {
+            encoding = "br";
+          }
+
+          if (encoding != "identity") {
+            if (filepath.includes(".js")) {
+              mimetype = "application/javascript";
+            }
+          }
+
+          this.files.push({
+            path: filepath,
+            content: Buffer.from(fs.readFileSync(filepath)),
+            encoding,
+            mimetype
+          });
+        });
+      }
+    }
+  }
+
+  find(path) {
+    return this.files.find(f => f.path == path);
+  }
 }
 
 function isDistPath(path) {
@@ -20,58 +62,38 @@ function isPublicPath(path) {
   return path.startsWith("/%PUBLIC_URL%");
 }
 
-function onRequest(request, response) {
+function onRequest(request, response, fileManager) {
   const url = request.url;
-  log("INFO", `Request at '${url}'`);
-
+  const encodings = request.headers["accept-encoding"] || "";
   let path = `${PUBLIC_PATH}/index.html`;
-  let contentType = "text/html";
 
   if (isDistPath(url)) {
     path = url.replace("/%DIST_URL%", DIST_PATH);
-    contentType = "text/javascript";
   } else if (isPublicPath(url)) {
     path = url.replace("/%PUBLIC_URL%", PUBLIC_PATH);
-    switch (path.split(".").slice(-1)[0]) {
-      case "html":
-        contentType = "text/html";
-        break;
-
-      case "json":
-        contentType = "application/json";
-        break;
-
-      case "txt":
-        contentType = "text/plain";
-        break;
-
-      case "js":
-        contentType = "text/javascript";
-        break;
-
-      default:
-        contentType = "*/*";
-        break;
-    }
   } else if (url === "/robots.txt") {
     path = "./public/robots.txt";
   }
 
-  fs.readFile(path, (error, content) => {
-    if (error) {
-      if (error.code === "ENOENT") {
-        response.writeHead(404);
-        response.end("No such file or directory", "utf-8");
-      }
-    } else {
-      response.writeHead(200, {
-        "Content-Type": contentType,
-        "Content-Encoding": path.endsWith(".gz") ? "gzip" : "identity",
-        "Cache-Control": "must-revalidate, public, 604800"
-      });
-      response.end(content, "utf-8");
-    }
-  });
+  let file = fileManager.find(path);
+
+  if (encodings.includes("br")) {
+    file = fileManager.find(path + ".br") || file;
+  } else if (encodings.includes("gzip")) {
+    file = fileManager.find(path + ".gz") || file;
+  }
+
+  if (file) {
+    response.writeHead(200, {
+      "Content-Type": file.mimetype,
+      "Content-Encoding": file.encoding,
+      "Cache-Control": "must-revalidate, public, 604800"
+    });
+    response.end(file.content, "utf-8");
+  } else {
+    response.writeHead(404);
+    response.end("No such file or directory", "utf-8");
+  }
 }
 
 const HTTP_PORT = parseInt(process.env.PORT);
@@ -85,30 +107,18 @@ const server = http2.createSecureServer({
   cert: fs.readFileSync(process.env.SSL_CERT, "utf-8"),
 });
 
+const fileManager = new FileManager({
+  dirs: [PUBLIC_PATH, DIST_PATH, DIST_PATH + "/modules"]
+});
+
 server.on("error", (err) => console.error(err));
-server.on("request", onRequest);
+server.on("request", (req, res) => onRequest(req, res, fileManager));
 server.listen(HTTPS_PORT);
 
 http.createServer((request, response) => {
   const host = request.headers.host.replace(`:${HTTP_PORT}`, `:${HTTPS_PORT}`);
   response.writeHead(301, { "Location": `https://${host}${request.url}` });
   response.end();
-  log("INFO", "Redirect to HTTP/2");
 }).listen(HTTP_PORT);
-
-if (process.argv.includes("--browser")) {
-  switch (process.platform) {
-    case "win32":
-      exec(`cmd /c start ${HTTPS_HOST}`);
-      break;
-
-    case "darwin":
-      exec(`open ${HTTPS_HOST}`);
-
-    case "linux":
-      exec(`xdg-open ${HTTPS_HOST}`);
-      break;
-  }
-}
 
 console.log(`Server running at ${HTTP_HOST}/ ${HTTPS_HOST}/`);

@@ -67,7 +67,23 @@ module.exports = {
     ]),
     new CompressionPlugin({
       test: /\.(t|j)s(x?)(\.map)?$/i,
-      cache: true
+      cache: true,
+      algorithm: "gzip",
+      filename: '[path].gz[query]',
+      compressionOptions: {
+        level: 9
+      },
+      deleteOriginalAssets: false,
+    }),
+    new CompressionPlugin({
+      test: /\.(t|j)s(x?)(\.map)?$/i,
+      cache: true,
+      algorithm: "brotliCompress",
+      filename: '[path].br[query]',
+      compressionOptions: {
+        level: 11
+      },
+      deleteOriginalAssets: false,
     })
   ]
 };
