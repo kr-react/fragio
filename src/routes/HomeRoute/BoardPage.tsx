@@ -532,41 +532,56 @@ export default function BoardPage(props: { id: string }) {
               }
             })}/>
             {isOwner() &&
-              <select onChange={e => {
-                const value = e.currentTarget.value;
-                api.updateBoard(localState.board.id, {
-                  isPrivate: value == 1 ? true : false
-                }).then(board => {
+              <React.Fragment>
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  const data = new FormData(e.currentTarget);
+                  api.updateBoard(localState.board.id, {
+                    backgroundImage: data.get("bgurl")
+                  }).then(board => {
                     setLocalState({
                       ...localState,
                       board
                     });
-                });
-              }}>
-                <option selected={!localState.board.isPrivate} value={0}>Public</option>
-                <option selected={localState.board.isPrivate} value={1}>Private</option>
-              </select>
-            }
-            {isOwner() &&
-              <select onChange={e => {
-                const value = e.currentTarget.value;
-                api.updateBoard(localState.board.id, {
-                  teamId: value == 0 ? null : value
-                }).then(board => {
-                    setLocalState({
-                      ...localState,
-                      board
-                    });
-                });
-              }}>
-                <option selected={!localState.board.team} value={0}>None</option>
-                {localState.teams.map(team =>
-                  <option selected={localState.board.team && team.id == localState.board.team.id}
-                    value={team.id}>
-                    {team.name}
-                  </option>
-                )}
-              </select>
+                  });
+                }}>
+                  <input name="bgurl" type="url" defaultValue={localState.board.backgroundImage}/>
+                  <input type="submit" value="set"/>
+                </form>
+                <select onChange={e => {
+                  const value = e.currentTarget.value;
+                  api.updateBoard(localState.board.id, {
+                    isPrivate: value == 1 ? true : false
+                  }).then(board => {
+                      setLocalState({
+                        ...localState,
+                        board
+                      });
+                  });
+                }}>
+                  <option selected={!localState.board.isPrivate} value={0}>Public</option>
+                  <option selected={localState.board.isPrivate} value={1}>Private</option>
+                </select>
+                <select onChange={e => {
+                  const value = e.currentTarget.value;
+                  api.updateBoard(localState.board.id, {
+                    teamId: value == 0 ? null : value
+                  }).then(board => {
+                      setLocalState({
+                        ...localState,
+                        board
+                      });
+                  });
+                }}>
+                  <option selected={!localState.board.team} value={0}>None</option>
+                  {localState.teams.map(team =>
+                    <option selected={localState.board.team && team.id == localState.board.team.id}
+                      value={team.id}>
+                      {team.name}
+                    </option>
+                  )}
+                </select>
+              </React.Fragment>
             }
           </div>
         }>

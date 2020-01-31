@@ -56,21 +56,30 @@ const store = createStore(appReducer);
 store.subscribe(() => update(store));
 update(store);
 
-window.addEventListener("resize", () => {
-  if (window.innerWidth >= ApplicationState.DesktopBreakpoint) {
-    store.dispatch({
-      type: "VIEWMODE_CHANGE",
-      data: "Desktop"
-    });
-  } else if (window.innerWidth >= ApplicationState.TabletBreakpoint) {
-    store.dispatch({
-      type: "VIEWMODE_CHANGE",
-      data: "Tablet"
-    });
-  } else {
-    store.dispatch({
-      type: "VIEWMODE_CHANGE",
-      data: "Mobile"
-    });
-  }
+const mqDesktop = window.matchMedia(`(min-width: ${ApplicationState.DesktopBreakpoint}px)`);
+const mqTablet = window.matchMedia(`(min-width: ${ApplicationState.TabletBreakpoint}px) and (max-width: ${ApplicationState.DesktopBreakpoint}px)`);
+const mqMobile = window.matchMedia(`(min-width: 0px) and (max-width: ${ApplicationState.TabletBreakpoint}px)`);
+
+mqDesktop.addListener(e => {
+  if (!e.matches) return;
+  store.dispatch({
+    type: "VIEWMODE_CHANGE",
+    data: "Desktop"
+  });
+});
+
+mqTablet.addListener(e => {
+  if (!e.matches) return;
+  store.dispatch({
+    type: "VIEWMODE_CHANGE",
+    data: "Tablet"
+  });
+});
+
+mqMobile.addListener(e => {
+  if (!e.matches) return;
+  store.dispatch({
+    type: "VIEWMODE_CHANGE",
+    data: "Mobile"
+  });
 });
