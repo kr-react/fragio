@@ -38,8 +38,8 @@ export default function Text(props: TextProps) {
 
   return (
     <span className={classes.join(' ')}
-      contentEditable={props.editable}
-      spellcheck={props.spellcheck || false}
+      contentEditable={props.editable || false}
+      spellcheck={props.spellcheck == true ? "true" : "false"}
       onBlur={onBlurHandler}
       style={{
         ...props.style,
