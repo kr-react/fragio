@@ -162,14 +162,12 @@ a:hover {
   cursor: pointer;
 
   & > .card-com-labels {
-    height: 8px;
-    margin-bottom: 5px;
-
     & > div {
       display: inline-block;
       border-radius: $border-radius;
-      height: inherit;
+      height: 8px;
       width: 30px;
+      margin: 0 7px 5px 0;
     }
   }
 }

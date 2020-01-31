@@ -35,7 +35,7 @@ export default function BoardPage(props: { id: string }) {
     cards: Card[],
     teams: Team[],
     isPaneOpen: boolean,
-    selectedCard: number
+    selectedCard: number,
   }>(undefined);
 
   React.useEffect(() => {
@@ -51,8 +51,10 @@ export default function BoardPage(props: { id: string }) {
           lists,
           cards,
           teams,
-          isPaneOpen: false
+          isPaneOpen: false,
+          selectedCard: undefined,
         });
+
         document.title = `${board.name} - ${process.env.APP_NAME}`
       } else {
         setLocalState(null);
@@ -61,6 +63,18 @@ export default function BoardPage(props: { id: string }) {
 
     apiRequest();
   }, []);
+
+  function canEdit() {
+    const { board, teams } = localState;
+    const { user } = globalState;
+
+    return (board.team && teams.some(team => team.id == board.team.id))
+      || user.id == board.ownerId;
+  }
+
+  function isOwner() {
+    return globalState.user && localState.board.ownerId == globalState.user.id;
+  }
 
   function randomNumber(min?: number, max?: number) {
     min = Math.ceil(min || Number.MIN_VALUE);
@@ -198,7 +212,7 @@ export default function BoardPage(props: { id: string }) {
         })}
       >
         {labels.length > 0 &&
-          <div className="card-com-labels flex-row flex-wrap content-hmargin">
+          <div className="card-com-labels flex-row flex-wrap">
             {labels.map(label => <div style={{backgroundColor: `#${label.color.toString(16)}`}}/>)}
           </div>
         }
@@ -387,13 +401,15 @@ export default function BoardPage(props: { id: string }) {
             return true;
           }}/>
         <ButtonGroup className="self-flex-end" type="space-between">
-          <Button type="standard" text="Create list" onClick={() => api.createList(props.id, {
-            name: "New List",
-            position: localState.lists.length
-          }).then(list => setLocalState({
-            ...localState,
-            lists: localState.lists.concat([list])
-          }))}/>
+          {canEdit() &&
+            <Button type="standard" text="Create list" onClick={() => api.createList(props.id, {
+              name: "New List",
+              position: localState.lists.length
+            }).then(list => setLocalState({
+              ...localState,
+              lists: localState.lists.concat([list])
+            }))}/>
+          }
           <Button type="primary" text="Menu" onClick={() => setLocalState({
             ...localState,
             isPaneOpen: !localState.isPaneOpen
@@ -515,7 +531,7 @@ export default function BoardPage(props: { id: string }) {
                 history.push("/");
               }
             })}/>
-            {localState.board.ownerId == globalState.user.id &&
+            {isOwner() &&
               <select onChange={e => {
                 const value = e.currentTarget.value;
                 api.updateBoard(localState.board.id, {
@@ -531,7 +547,7 @@ export default function BoardPage(props: { id: string }) {
                 <option selected={localState.board.isPrivate} value={1}>Private</option>
               </select>
             }
-            {localState.board.ownerId == globalState.user.id &&
+            {isOwner() &&
               <select onChange={e => {
                 const value = e.currentTarget.value;
                 api.updateBoard(localState.board.id, {

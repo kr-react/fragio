@@ -84,20 +84,28 @@ export default function HomePage() {
   return (
     <Grid className="stretch" colums={getGridColumns()}>
       <Nav style={{borderRight: "solid 1px #ECECEC"}}>
-        <NavItem onClick={() => api.createBoard({
-          name: "New Board"
-        }).then(board => setLocalState({
-          ...localState,
-          boards: localState.boards.concat([board])
-        }))}>
-          Create board
-        </NavItem>
-        <NavItem selected={true}>Home</NavItem>
-        <NavItem onClick={() => logout()}>Logout</NavItem>
+        <NavSection header={
+          <div className="flex-row flex-justify-between flex-align-baseline">
+            <Text content="Boards" weight="bold"/>
+            <Button text="Create" onClick={() => {
+              api.createBoard({
+                name: "New Board"
+              }).then(board => {
+                setLocalState({
+                  ...localState,
+                  boards: localState.boards.concat([board])
+                });
+              });
+            }}/>
+          </div>
+        }>
+          <NavItem selected={true}>Home</NavItem>
+          <NavItem onClick={() => logout()}>Logout</NavItem>
+        </NavSection>
         <NavSeparator/>
         <NavSection header={
           <div className="flex-row flex-justify-between flex-align-baseline">
-            <Text content="TEAMS" weight="bold"/>
+            <Text content="Teams" weight="bold"/>
             <Button text="Create" onClick={() => {
               api.createTeam({
                 name: `Team ${localState.teams.length}`
