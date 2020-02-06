@@ -95,14 +95,14 @@ export default function BoardPage(props: { id: string }) {
       .filter(label => !ids.includes(label.id));
   }
 
-  const TaskListComponent = React.memo((props: {list: List}) => {
+  const ListComponent = React.memo((props: {list: List}) => {
     const { list } = props;
 
     return (
       <div className="list-com flex-column">
         <div className="list-com-header border-bottom flex-row flex-align-center flex-justify-between">
           <Text className="nowrap" content={list.name} weight="bold" size="1rem"
-            editable={localState.board.ownerId == globalState.user.id}
+            editable={canEdit()}
             onEditComplete={elem => {
               api.updateList(list.boardId, list.id, {
                 name: elem.innerText,
@@ -154,7 +154,7 @@ export default function BoardPage(props: { id: string }) {
         </div>
         <div className="list-com-content overflow-y-auto">
           <LZList source={localState.cards.filter(card => card.listId == list.id).sort((a, b) => a.position - b.position)}
-            direction="column"
+            orientation="vertical"
             gap={10} gapStart={10} gapEnd={10} itemDraggable={true}
             style={{padding: "0 10px"}}
             select={card => card.id}
@@ -187,8 +187,7 @@ export default function BoardPage(props: { id: string }) {
                   }
                 }
 
-                cards[index].listId = list.id;
-                cards[index].position = info.to;
+                cards[index] = card;
                 setLocalState({
                   ...localState,
                   cards
@@ -201,22 +200,33 @@ export default function BoardPage(props: { id: string }) {
   });
 
   const CardComponent = React.memo((props: {card: Card}) => {
-    const {card} = props;
+    function findImage() {
+      const pattern = /(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+\.(jpg|png|gif)/g;
+      const urls = props.card.description.match(pattern);
+      return urls ? urls[0] : null;
+    }
+
+    const { card } = props;
     const labels = getLabels(card.labelIds);
+    const imageUrl = findImage();
 
     return (
-      <div key={card.id} className="card-com" draggable={true}
+      <div className="card-com overflow-hidden" draggable={true}
         onClick={e => setLocalState({
           ...localState,
           selectedCard: localState.cards.findIndex(c => c.id == card.id)
-        })}
-      >
-        {labels.length > 0 &&
-          <div className="card-com-labels flex-row flex-wrap">
-            {labels.map(label => <div style={{backgroundColor: `#${label.color.toString(16)}`}}/>)}
-          </div>
+        })}>
+        {imageUrl &&
+          <img className="w100" src={imageUrl}/>
         }
-        <div>{card.name}</div>
+        <div className="p10">
+          {labels.length > 0 &&
+            <div className="card-com-labels flex-row flex-wrap">
+              {labels.map(label => <div style={{backgroundColor: `#${label.color.toString(16)}`}}/>)}
+            </div>
+          }
+          <div>{card.name}</div>
+        </div>
       </div>
     );
   });
@@ -226,7 +236,7 @@ export default function BoardPage(props: { id: string }) {
       return (
         <div className="card-com-popup-header flex-row flex-align-center flex-justify-between">
           <Text content={props.card.name} weight="bold" size="1.2rem"
-            editable={true} 
+            editable={canEdit()}
             onEditComplete={elem => {
               api.updateCard(localState.board.id, props.card.listId, props.card.id, {
                 name: elem.innerText,
@@ -349,7 +359,7 @@ export default function BoardPage(props: { id: string }) {
             <Text className="block" style={{marginTop: "5px"}}
               breakWord={true}
               content={props.card.description || "No Description"}
-              editable={true}
+              editable={canEdit()}
               onEditComplete={elem => {
                 api.updateCard(localState.board.id, props.card.listId, props.card.id, {
                   description: elem.innerText,
@@ -386,20 +396,24 @@ export default function BoardPage(props: { id: string }) {
 
   return (
     <Grid rows={["53px", "auto"]}>
-      <Layout className="border-bottom flex-row flex-align-center flex-justify-between overflow-x-auto" 
-        style={{padding: "10px 20px"}}>
-        <Text className="nowrap" content={localState.board.name} weight="bold" size="1.2rem" 
-          editable={localState.board.ownerId == globalState.user.id}
-          style={{marginRight: "10px"}}
-          onEditComplete={elem => {
-            api.updateBoard(props.id, {
-              name: elem.innerText
-            }).then(board => setLocalState({
-              ...localState,
-              board
-            }));
-            return true;
-          }}/>
+      <Layout className="border-bottom flex-row flex-align-center flex-justify-between overflow-x-auto ph20">
+        <div>
+          <Text className="nowrap" content={localState.board.name} weight="bold" size="1.2rem" 
+            editable={canEdit()}
+            style={{marginRight: "10px"}}
+            onEditComplete={elem => {
+              api.updateBoard(props.id, {
+                name: elem.innerText
+              }).then(board => setLocalState({
+                ...localState,
+                board
+              }));
+              return true;
+            }}/>
+          {localState.board.team &&
+            <span>{localState.board.team.name}</span>
+          }
+        </div>
         <ButtonGroup className="self-flex-end" type="space-between">
           {canEdit() &&
             <Button type="standard" text="Create list" onClick={() => api.createList(props.id, {
@@ -423,7 +437,25 @@ export default function BoardPage(props: { id: string }) {
         })}
         pane={
           <div className="flex-column content-vmargin p20">
-            <Text content="Labels" weight="bold" size="1.1rem"/>
+            <div>
+              <Text className="iblock" content="Labels" weight="bold" size="1.1rem"/>
+              <Button className="right" text="Create"
+                onClick={() => {
+                  const num = randomNumber(0x000000, 0xFFFFFF);
+                  api.createLabel(localState.board.id, {
+                    name: num.toString(),
+                    color: num
+                  }).then(label => {
+                    setLocalState({
+                      ...localState,
+                      board: {
+                        ...localState.board,
+                        labels: localState.board.labels.concat(label)
+                      }
+                    });
+                  });
+                }}/>
+            </div>
             <Table
               sources={localState.board.labels.map((label, index) => {
                 return {
@@ -431,7 +463,7 @@ export default function BoardPage(props: { id: string }) {
                   unselectable: false,
                   fields: {
                     name: (
-                      <Text content={label.name} editable={true}
+                      <Text content={label.name} editable={canEdit()}
                         onEditComplete={elem => {
                           api.updateLabel(localState.board.id, label.id, {
                             name: elem.innerText
@@ -507,32 +539,9 @@ export default function BoardPage(props: { id: string }) {
                 }
               ]}
             />
-            <Button type="primary" text="Add Label"
-              onClick={() => {
-                const num = randomNumber(0x000000, 0xFFFFFF);
-                api.createLabel(localState.board.id, {
-                  name: num.toString(),
-                  color: num
-                }).then(label => {
-                  setLocalState({
-                    ...localState,
-                    board: {
-                      ...localState.board,
-                      labels: localState.board.labels.concat(label)
-                    }
-                  });
-                });
-              }}
-            />
-            <Button type="primary" text="Delete" onClick={() => api.deleteBoard(props.id).then(() => {
-              if (history.length > 1) {
-                history.goBack();
-              } else {
-                history.push("/");
-              }
-            })}/>
             {isOwner() &&
               <React.Fragment>
+                <Text content="Advanced" weight="bold" size="1.1rem"/>
                 <form onSubmit={e => {
                   e.preventDefault();
                   const data = new FormData(e.currentTarget);
@@ -581,6 +590,13 @@ export default function BoardPage(props: { id: string }) {
                     </option>
                   )}
                 </select>
+                <Button type="primary" text="Delete" onClick={() => api.deleteBoard(props.id).then(() => {
+                  if (history.length > 1) {
+                    history.goBack();
+                  } else {
+                    history.push("/");
+                  }
+                })}/>
               </React.Fragment>
             }
           </div>
@@ -595,9 +611,10 @@ export default function BoardPage(props: { id: string }) {
           backgroundImage: localState.board.backgroundImage ? `url("${localState.board.backgroundImage}")` : undefined
         }}>
           <LZList source={localState.lists.sort((a, b) => a.position - b.position)}
+            orientation="horizontal"
             gap={10} gapStart={20} gapEnd={20} itemDraggable={true}
             select={list => list.id}
-            render={list => <TaskListComponent key={list.id} list={list}/>}
+            render={list => <ListComponent key={list.id} list={list}/>}
             onDrop={info => {
               if (info.to == info.from) return;
               api.updateList(localState.board.id, info.data, {

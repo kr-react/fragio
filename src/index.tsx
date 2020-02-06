@@ -5,25 +5,34 @@ import { Provider } from "react-redux";
 import { createStore,Store } from "redux";
 import { ApplicationState, ReduxAction } from "./common";
 
+require("bootstrap");
+import "./index.scss";
+import "bootstrap/dist/css/bootstrap.min.css";
+
 // Routes
 import HomeRoute from "./routes/HomeRoute/";
 import LoginRoute from "./routes/LoginRoute/";
 
-// Styles
-import "./lazuli/css/lazuli.scss";
-
 // Redux Reducers
 function appReducer(state: ApplicationState = new ApplicationState, action: ReduxAction) {
-  if (action.type === "LOGIN") {
-    window.localStorage.setItem("token", action.data.token);
+  if (action.type == "LOGIN") {
+    if (action.data.storage == "local") {
+      localStorage.setItem("token", action.data.token);
+    } else {
+      sessionStorage.setItem("token", action.data.token);
+    }
+
     return {
       ...state,
+      token: action.data.token,
       user: action.data.user
     };
-  } else if (action.type === "LOGOUT") {
+  } else if (action.type == "LOGOUT") {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     return {
       ...state,
+      token: null,
       user: null
     };
   } else if (action.type == "VIEWMODE_CHANGE") {
@@ -38,16 +47,18 @@ function appReducer(state: ApplicationState = new ApplicationState, action: Redu
 
 function update(store: Store<ApplicationState, ReduxAction>) {
   render(
-    <Provider store={store}>
-      <BrowserRouter>
-        <Switch>
-          <Route exact path="/" component={HomeRoute}/>
-          <Route exact path="/board/:id" component={HomeRoute}/>
-          <Route exact path="/team/:id" component={HomeRoute}/>
-          <Route exact path="/login" component={LoginRoute}/>
-        </Switch>
-      </BrowserRouter>
-    </Provider>,
+    <React.Fragment>
+      <Provider store={store}>
+        <BrowserRouter>
+          <Switch>
+            <Route exact path="/" component={HomeRoute}/>
+            <Route exact path="/board/:id" component={HomeRoute}/>
+            <Route exact path="/team/:id" component={HomeRoute}/>
+            <Route exact path="/login" component={LoginRoute}/>
+          </Switch>
+        </BrowserRouter>
+      </Provider>
+    </React.Fragment>,
     document.querySelector("#root")
   );
 }
@@ -56,30 +67,16 @@ const store = createStore(appReducer);
 store.subscribe(() => update(store));
 update(store);
 
-const mqDesktop = window.matchMedia(`(min-width: ${ApplicationState.DesktopBreakpoint}px)`);
-const mqTablet = window.matchMedia(`(min-width: ${ApplicationState.TabletBreakpoint}px) and (max-width: ${ApplicationState.DesktopBreakpoint}px)`);
-const mqMobile = window.matchMedia(`(min-width: 0px) and (max-width: ${ApplicationState.TabletBreakpoint}px)`);
+for (let i = 0; i < ApplicationState.ViewModes.length; i++) {
+  const min = `${ApplicationState.ViewModes[i].breakpoint}px`;
+  const max = i > 0 ? `${ApplicationState.ViewModes[i - 1].breakpoint}px` : undefined;
+  const media = window.matchMedia(`(min-width: ${min})${max ? ` and (max-width: ${max})` : ""}`);
 
-mqDesktop.addListener(e => {
-  if (!e.matches) return;
-  store.dispatch({
-    type: "VIEWMODE_CHANGE",
-    data: "Desktop"
+  media.addListener(e => {
+    if (!e.matches) return;
+    store.dispatch({
+      type: "VIEWMODE_CHANGE",
+      data: ApplicationState.ViewModes[i].name
+    });
   });
-});
-
-mqTablet.addListener(e => {
-  if (!e.matches) return;
-  store.dispatch({
-    type: "VIEWMODE_CHANGE",
-    data: "Tablet"
-  });
-});
-
-mqMobile.addListener(e => {
-  if (!e.matches) return;
-  store.dispatch({
-    type: "VIEWMODE_CHANGE",
-    data: "Mobile"
-  });
-});
+}

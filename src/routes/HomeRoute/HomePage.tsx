@@ -10,227 +10,80 @@ import {
   FragioAPI,
 } from "../../common";
 
-import {
-  Avatar,
-  Header,
-  HeaderItem,
-  Button,
-  Tabs,
-  Table,
-  Layout,
-  Nav,
-  NavItem,
-  NavSection,
-  NavSeparator,
-  Grid,
-  Text
-} from "../../lazuli";
-
 export default function HomePage() {
-  const api = new FragioAPI(process.env.API_URL, window.localStorage.getItem("token"));
+  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
+  const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
   const dispatch = useDispatch();
-  const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
   const [localState, setLocalState] = React.useState<{
     boards: Board[],
     teams: Team[],
-    history: HistoryEntry[]
+    history: HistoryEntry[],
+    activities: Activity[]
   }>(undefined);
 
   React.useEffect(() => {
-    async function apiRequest() {
-      const boards = await api.getBoardsFromUser(globalState.user.username);
-      const teams = await api.getTeamsFromUser(globalState.user.username);
-      const history = await api.getHistoryFromUser(globalState.user.username);
+    async function request() {
+      const boards = await api.getBoardsFromUser(user.username);
+      const teams = await api.getTeamsFromUser(user.username);
+      const history = await api.getHistoryFromUser(user.username);
+      const activities = await api.getActivitiesFromUser(user.username);
 
-      if (boards && teams && history) {
+      if (boards && teams && history && activities) {
         setLocalState({
           boards,
           teams,
-          history
+          history,
+          activities
         });
       } else {
         setLocalState(null);
       }
     }
 
-    apiRequest();
+    request();
     document.title = `Home - ${process.env.APP_NAME}`;
   }, []);
 
-  function getGridColumns() {
-    if (globalState.viewMode == "Desktop") {
-      return ["240px", "auto", "340px"];
-    } else if (globalState.viewMode == "Tablet") {
-      return ["240px", "auto", "0px"];
-    } else {
-      return ["0px", "auto", "0px"];
-    }
+  function getLastTimeOpen(boardId: string) {
+    const h = localState.history.find(h => h.boardId == boardId);
+    return h ? new Date(h.createdAt).toLocaleString() : "Never";
   }
 
-  function logout() {
-    dispatch({
-      type: "LOGOUT",
-      data: null
-    });
-  }
-
-  if (localState === null) {
-    return <div>Loading</div>;
-  } else if (localState === undefined) {
-    return <div>Error</div>;
+  if (localState === undefined) {
+    return (
+      <span>Loading</span>
+    );
+  } else if (localState === null) {
+    return (
+      <span>Error</span>
+    );
   }
 
   return (
-    <Grid className="stretch" colums={getGridColumns()}>
-      <Nav style={{borderRight: "solid 1px #ECECEC"}}>
-        <NavSection header={
-          <div className="flex-row flex-justify-between flex-align-baseline">
-            <Text content="Boards" weight="bold"/>
-            <Button text="Create" onClick={() => {
-              api.createBoard({
-                name: "New Board"
-              }).then(board => {
-                setLocalState({
-                  ...localState,
-                  boards: localState.boards.concat([board])
-                });
-              });
-            }}/>
-          </div>
-        }>
-          <NavItem selected={true}>Home</NavItem>
-          <NavItem onClick={() => logout()}>Logout</NavItem>
-        </NavSection>
-        <NavSeparator/>
-        <NavSection header={
-          <div className="flex-row flex-justify-between flex-align-baseline">
-            <Text content="Teams" weight="bold"/>
-            <Button text="Create" onClick={() => {
-              api.createTeam({
-                name: `Team ${localState.teams.length}`
-              }).then(team => {
-                setLocalState({
-                  ...localState,
-                  teams: localState.teams.concat([team])
-                });
-              });
-            }}/>
-          </div>
-        }>
-          {localState.teams.map(team =>
-            <NavItem onClick={e => history.push(`/team/${team.id}`)}>
-              {team.name}
-            </NavItem>
-          )}
-        </NavSection>
-      </Nav>
-      <main className="overflow-y-auto p20 color-secondary">
-        <Tabs defaultIndex={1}>
-          {[
-            {
-              name: "My Boards",
-              component: (
-                <Table sources={localState.boards.map(board => {
-                  const entry = localState.history.find(h => h.boardId == board.id);
-                  return {
-                    key: board.id,
-                    fields: {
-                      name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
-                      lastOpen: entry ? new Date(entry.createdAt).toLocaleString() : "Never",
-                      team: board.team ? <Link to={`/team/${board.team.id}`}>{board.team.name}</Link> : "None",
-                      owner: board.owner.name,
-                      avatar: (
-                        <Avatar src={board.owner.imageUrl} style={{
-                          width: "25px",
-                          height: "25px"
-                        }}/>
-                      )
-                    }
-                  };
-                })}
-                columns={[
-                  {
-                    title: "",
-                    field: "avatar"
-                  },
-                  {
-                    title: "Owner",
-                    field: "owner"
-                  },
-                  {
-                    title: "Name",
-                    field: "name"
-                  },
-                  {
-                    title: "Team",
-                    field: "team"
-                  },
-                  {
-                    title: "Last open by you",
-                    field: "lastOpen"
-                  },
-                ]}/>
-              )
-            },
-            {
-              name: "Recent",
-              component: (
-                <Table sources={localState.history.map(entry => {
-                  const {board, createdAt} = entry;
-                  const date = new Date(createdAt);
-                  return {
-                    key: board.id,
-                    fields: {
-                      name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
-                      lastOpen: date.toLocaleString(),
-                      team: board.team ? <Link to={`/team/${board.team.id}`}>{board.team.name}</Link> : "None",
-                      owner: board.owner.name,
-                      avatar: (
-                        <Avatar src={board.owner.imageUrl} style={{
-                          width: "25px",
-                          height: "25px"
-                        }}/>
-                      )
-                    }
-                  };
-                })}
-                columns={[
-                  {
-                    title: "",
-                    field: "avatar",
-                  },
-                  {
-                    title: "Owner",
-                    field: "owner"
-                  },
-                  {
-                    title: "Name",
-                    field: "name"
-                  },
-                  {
-                    title: "Team",
-                    field: "team"
-                  },
-                  {
-                    title: "Last open by you",
-                    field: "lastOpen"
-                  },
-                ]}/>
-              )
-            },
-            {
-              name: "Shared with me",
-              component: <p>Nothing here yet</p>
-            }
-          ]}
-        </Tabs>
-      </main>
-      <Nav style={{borderLeft: "solid 1px #ECECEC"}}>
-        <NavSection text="Activity">
-          <NavItem>Example</NavItem>
-        </NavSection>
-      </Nav>
-    </Grid>
+    <div className="container-fluid h-100">
+      <div className="row h-100">
+        <div className="w-240 ph-15 border-right d-none d-sm-none d-md-block">
+          Hi
+        </div>
+        <main className="col-sm bg-light">
+          Hi
+        </main>
+        <div className="of-auto w-340 ph-15 h-100 border-left d-none d-sm-none d-md-none d-lg-block">
+          <h5 className="mt-3">Activites</h5>
+          {localState.activities.map(activity =>
+            <div className="card mt-3">
+              <div className="card-header">
+                {activity.user.name}
+              </div>
+              <div className="card-body">
+                <h6 className="card-title">Activity</h6>
+                <p className="card-text"></p>
+              </div>
+            </div>
+         )}
+        </div>
+      </div>
+    </div>
   );
 }

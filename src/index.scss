@@ -1,0 +1,14 @@
+.w-240 { width: 240px !important }
+.w-340 { width: 340px !important }
+.pv-15 { padding: 15px 0 !important }
+.ph-15 { padding: 0 15px !important }
+.of-auto { overflow: auto !important }
+.of-hidden { overflow: hidden !important }
+.pointer { cursor: pointer !important }
+
+html, body, #root {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+}

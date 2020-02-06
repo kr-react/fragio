@@ -1,64 +1,71 @@
 import * as React from "react";
-import { useSelector } from "react-redux";
-import { Switch, Route } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Switch, Route, Link } from "react-router-dom";
 import { Redirect } from "react-router-dom";
 
 import HomePage from "./HomePage.tsx";
-import TeamPage from "./TeamPage.tsx";
-import BoardPage from "./BoardPage.tsx";
+// import TeamPage from "./TeamPage.tsx";
+// import BoardPage from "./BoardPage.tsx";
 
 import {
   ApplicationState,
   User,
 } from "../../common";
 
-import {
-  Avatar,
-  Header,
-  HeaderItem,
-  Grid,
-  Text,
-} from "../../lazuli";
-
 export default function HomeRoute({ match }: any) {
-  const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
-
-  if (!globalState.user) {
-    return <Redirect to={`/login?location=${match.url}`}/>;
-  }
-
-  const HeaderUserController = React.memo((props: { user: User }) => {
-    return (
-      <div className="user-ctl-com">
-        <span>{props.user.name}</span>
-        <Avatar src={props.user.imageUrl} style={{
-          width: "25px",
-          height: "25px"
-        }}/>
-      </div>
-    );
+  const dispatch = useDispatch();
+  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
+  const [state, setState] = React.useState({
+    isMenuOpen: false,
   });
 
+  if (!user) {
+    return (
+      <Redirect to="/login"/>
+    );
+  }
+
   return (
-    <Grid rows={["50px", "auto"]} colums={["100%"]}>
-      <Header>
-        <HeaderItem>
-          {globalState.viewMode == "Mobile" &&
-            <Text content="F" weight="bold" size="1.5rem"/>
-          }
-          {globalState.viewMode != "Mobile" &&
-            <Text content="Fragio" weight="bold" size="1.3rem"/>
-          }
-        </HeaderItem>
-        <HeaderItem>
-          <HeaderUserController user={globalState.user}/>
-        </HeaderItem>
-      </Header>
-      <Switch>
-        <Route exact path="/" render={() => <HomePage/>}/>
-        <Route exact path="/board/:id" render={props => <BoardPage id={props.match.params.id}/>}/>
-        <Route exact path="/team/:id" render={props => <TeamPage id={props.match.params.id}/>}/>
-      </Switch>
-    </Grid>
+    <div className="d-flex flex-column h-100">
+      <nav className="navbar navbar-expand-lg navbar-light bg-dark navbar-dark">
+        <Link className="navbar-brand" to="/">{process.env.APP_NAME}</Link>
+        <ul className="navbar-nav ml-auto text-light">
+          <li className="nav-item dropdown">
+            <div
+              id="userctl-dropdown-toggle"
+              className="pointer"
+              role="buttton"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false">
+              <span
+                className="dropdown-toggle pointer">
+                {user.name}
+              </span>
+              <img
+                className="ml-3 rounded"
+                src={user.imageUrl}
+                width="30"
+                height="30"/>
+            </div>
+            <div
+              className="dropdown-menu"
+              aria-labelledby="userctl-dropdown-toggle">
+              <a
+                href="#"
+                className="dropdown-item"
+                onClick={() => dispatch({ type: "LOGOUT" })}>
+                Logout
+              </a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+      <div className="of-hidden">
+        <Switch>
+          <Route exact path="/" component={HomePage}/>
+        </Switch>
+      </div>
+    </div>
   );
 }

@@ -4,22 +4,86 @@ export interface ReduxAction {
 }
 
 export class ApplicationState {
-  static DesktopBreakpoint = 992;
-  static TabletBreakpoint = 768;
+  static ViewModes = [
+    {
+      name: "Desktop",
+      breakpoint: 992,
+    },
+    {
+      name: "Tablet",
+      breakpoint: 768,
+    },
+    {
+      name: "Mobile",
+      breakpoint: 0,
+    }
+  ];
 
-  viewMode: "Desktop" | "Tablet" | "Mobile" = "Desktop";
+  viewMode: string;
+  token?: string;
   user?: User;
 
   constructor() {
-    if (window.innerWidth >= ApplicationState.DesktopBreakpoint) {
-      this.viewMode = "Desktop";
-    } else if (window.innerWidth >= ApplicationState.TabletBreakpoint) {
-      this.viewMode = "Tablet";
-    } else {
-      this.viewMode = "Mobile";
+    for (const viewMode of ApplicationState.ViewModes) {
+      if (window.innerWidth > viewMode.breakpoint) {
+        this.viewMode = viewMode.name;
+        break;
+      }
     }
   }
 };
+
+export class QueryString {
+  obj: any = {};
+  baseurl: string;
+
+  constructor(url: string) {
+    const split = url.split("?", 2);
+    this.baseurl = split[0];
+    if (split.length > 1) {
+      const params = split[1];
+      const queries = params.match(/([\w\d]+(?:=([^&=]+))?)+/g);
+      for (let query of queries) {
+        const pair = query.split("=");
+        const key = pair[0];
+
+        if (pair.length === 1) {
+          this.obj[key] = true;
+          continue;
+        }
+
+        this.obj[key] = pair[1];
+      }
+    }
+  }
+
+  url(): string {
+    let result = this.baseurl + '?';
+    for (let key in this.obj) {
+      result += key;
+      if (this.obj[key] !== true) {
+        result += `=${this.obj[key]}`;
+      }
+      result += '&';
+    }
+    return result.substr(0, result.length - 1);
+  }
+
+  get<T>(key: string): T {
+    if (key in this.obj) {
+      return this.obj[key] as T;
+    }
+    return undefined;
+  }
+
+  set(key: string, value: string | number | boolean) {
+    this.obj[key] = value;
+  }
+
+  includes(key: string): boolean {
+    return key in this.obj;
+  }
+}
 
 export interface User {
   id: string;
@@ -93,56 +157,20 @@ export interface HistoryEntry {
   createdAt: string;
 }
 
-export class QueryString {
-  obj: any = {};
-  baseurl: string;
-
-  constructor(url: string) {
-    const split = url.split("?", 2);
-    this.baseurl = split[0];
-    if (split.length > 1) {
-      const params = split[1];
-      const queries = params.match(/([\w\d]+(?:=([^&=]+))?)+/g);
-      for (let query of queries) {
-        const pair = query.split("=");
-        const key = pair[0];
-
-        if (pair.length === 1) {
-          this.obj[key] = true;
-          continue;
-        }
-
-        this.obj[key] = pair[1];
-      }
-    }
-  }
-
-  url(): string {
-    let result = this.baseurl + '?';
-    for (let key in this.obj) {
-      result += key;
-      if (this.obj[key] !== true) {
-        result += `=${this.obj[key]}`;
-      }
-      result += '&';
-    }
-    return result.substr(0, result.length - 1);
-  }
-
-  get<T>(key: string): T {
-    if (key in this.obj) {
-      return this.obj[key] as T;
-    }
-    return undefined;
-  }
-
-  set(key: string, value: string | number | boolean) {
-    this.obj[key] = value;
-  }
-
-  includes(key: string): boolean {
-    return key in this.obj;
-  }
+export interface Acvitity {
+  id: string;
+  userId: string;
+  teamId?: string;
+  boardId?: string;
+  listId?: string;
+  cardId?: string;
+  activityType: number;
+  createdAt: string;
+  user: User;
+  team: Team;
+  board?: Board;
+  list?: List;
+  card?: Card;
 }
 
 class FragioAPIRequestOptions {
@@ -164,7 +192,7 @@ export class FragioAPI {
     const res = await fetch(`${this.url}/${endpoint}`, {
       method: options && options.method || "GET",
       headers: {
-        "Authorization": options && options.useToken ? `Bearer ${this.token}` : undefined,
+        "Authorization": options && options.useToken && this.token ? `Bearer ${this.token}` : undefined,
         "Content-Type": options && options.body ? "application/json" : undefined
       },
       body: JSON.stringify(options.body)
@@ -208,6 +236,12 @@ export class FragioAPI {
 
   async getTeamsFromUser(username: string) : Promise<Team[]> {
     return this.request(`api/v1/user/${username}/teams`, {
+      useToken: true
+    });
+  }
+
+  async getActivitiesFromUser(username: string, after: string = null) : Promise<Activity[]> {
+    return this.request(`api/v1/user/${username}/activity?after=${after}`, {
       useToken: true
     });
   }

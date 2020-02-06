@@ -5,6 +5,9 @@ require("dotenv").config();
 
 module.exports = {
   mode: "none",
+  optimization: {
+    usedExports: true
+  },
   devtool: "source-map",
   watch: false,
   watchOptions: {
