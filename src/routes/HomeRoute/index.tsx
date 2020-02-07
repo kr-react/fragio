@@ -51,17 +51,16 @@ export default function HomeRoute({ match }: any) {
             <div
               className="dropdown-menu"
               aria-labelledby="userctl-dropdown-toggle">
-              <a
-                href="#"
-                className="dropdown-item"
+              <span
+                className="dropdown-item pointer"
                 onClick={() => dispatch({ type: "LOGOUT" })}>
                 Logout
-              </a>
+              </span>
             </div>
           </li>
         </ul>
       </nav>
-      <div className="of-hidden">
+      <div className="container-fluid overflow-hidden h-100">
         <Switch>
           <Route exact path="/" component={HomePage}/>
         </Switch>

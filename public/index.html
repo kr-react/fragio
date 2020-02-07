@@ -7,24 +7,24 @@
     <meta name="theme-color" content="#292F36" />
     <meta name="description" content="Bruh" />
     <meta name="referrer" content="no-referrer" />
-    <link rel="shortcut icon" href="/%PUBLIC_URL%/favicon.ico" />
-    <link rel="manifest" href="/%PUBLIC_URL%/manifest.json" />
+    <link rel="shortcut icon" href="/dist/favicon.ico" />
+    <link rel="manifest" href="/dist/manifest.json" />
   </head>
   <body style="margin: 0">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
 
     <!-- Dependencies -->
-    <script src="/%DIST_URL%/modules/react.production.min.js"></script>
-    <script src="/%DIST_URL%/modules/react-dom.production.min.js"></script>
+    <script src="/dist/modules/react.production.min.js"></script>
+    <script src="/dist/modules/react-dom.production.min.js"></script>
 
     <!-- Main -->
-    <script src="/%DIST_URL%/main.js" defer></script>
+    <script src="/dist/main.js" defer></script>
 
     <!-- WebWorkers -->
     <script async>
       if (window.Worker) {
-        window._worker = new Worker("/%PUBLIC_URL%/worker.js");
+        window._worker = new Worker("/worker.js");
       }
     </script>
   </body>

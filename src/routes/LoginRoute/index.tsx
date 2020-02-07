@@ -73,6 +73,7 @@ export default function LoginRoute({ match }: any) {
             name="username"
             className="form-control"
             autofocus
+            autocomplete="username"
             type="text"/>
         </div>
         <div className="form-group">
@@ -81,6 +82,7 @@ export default function LoginRoute({ match }: any) {
             id="password"
             name="password"
             className="form-control"
+            autocomplete="current-password"
             type="password"/>
         </div>
         <div className="form-group form-check">
@@ -113,7 +115,7 @@ export default function LoginRoute({ match }: any) {
   }
 
   return (
-    <main className="bg-light h-100">
+    <main className="bg-dark h-100">
       <div className="container h-100">
         <div className="row h-100">
           <div className="col-sm-9 col-md-7 col-lg-5 mx-auto my-auto">

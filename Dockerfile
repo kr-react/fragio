@@ -9,7 +9,7 @@ RUN npm install
 
 COPY . .
 
-RUN npm build --mode=prodution
+RUN npm run build --mode=prodution
 
 EXPOSE 5000
 ENTRYPOINT ["npm", "start"]
