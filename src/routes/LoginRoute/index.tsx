@@ -20,7 +20,7 @@ function getTokenFromStorage() {
   };
 }
 
-export default function LoginRoute({ match }: any) {
+export default function LoginRoute({ match }) {
   const token = getTokenFromStorage();
   const api = new FragioAPI(process.env.API_URL, token.token);
   const qString = new QueryString(location.href);

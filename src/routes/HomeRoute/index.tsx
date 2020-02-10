@@ -4,15 +4,15 @@ import { Switch, Route, Link } from "react-router-dom";
 import { Redirect } from "react-router-dom";
 
 import HomePage from "./HomePage.tsx";
-// import TeamPage from "./TeamPage.tsx";
-// import BoardPage from "./BoardPage.tsx";
+import BoardPage from "./BoardPage.tsx";
+import TeamPage from "./TeamPage.tsx";
 
 import {
   ApplicationState,
   User,
 } from "../../common";
 
-export default function HomeRoute({ match }: any) {
+export default function HomeRoute({ match }) {
   const dispatch = useDispatch();
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const [state, setState] = React.useState({
@@ -21,7 +21,7 @@ export default function HomeRoute({ match }: any) {
 
   if (!user) {
     return (
-      <Redirect to="/login"/>
+      <Redirect to={`/login?location=${match.url}`}/>
     );
   }
 
@@ -51,6 +51,7 @@ export default function HomeRoute({ match }: any) {
             <div
               className="dropdown-menu"
               aria-labelledby="userctl-dropdown-toggle">
+              <div class="dropdown-divider"></div>
               <span
                 className="dropdown-item pointer"
                 onClick={() => dispatch({ type: "LOGOUT" })}>
@@ -60,11 +61,11 @@ export default function HomeRoute({ match }: any) {
           </li>
         </ul>
       </nav>
-      <div className="container-fluid overflow-hidden h-100">
-        <Switch>
-          <Route exact path="/" component={HomePage}/>
-        </Switch>
-      </div>
+      <Switch>
+        <Route exact path="/" component={HomePage}/>
+        <Route exact path="/board/:id" component={BoardPage}/>
+        <Route exact path="/team/:id" component={TeamPage}/>
+      </Switch>
     </div>
   );
 }

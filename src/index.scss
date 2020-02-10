@@ -1,6 +1,3 @@
-.sidebar { max-width: 340px !important }
-.pointer { cursor: pointer !important }
-
 html, body, #root {
   width: 100vw;
   height: 100vh;
@@ -19,4 +16,12 @@ html, body, #root {
     padding: 5px 10px;
     font-size: 0.8rem;
   }
+}
+
+.pointer { cursor: pointer; }
+
+// Bootstrap override
+
+.sticky-top {
+  top: 1rem !important;
 }

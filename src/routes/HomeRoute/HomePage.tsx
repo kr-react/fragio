@@ -12,7 +12,7 @@ import {
   FragioAPI,
 } from "../../common";
 
-export default function HomePage() {
+export default function HomePage({ match }) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
@@ -50,6 +50,32 @@ export default function HomePage() {
     request();
     document.title = `Home - ${process.env.APP_NAME}`;
   }, []);
+
+  function createBoard(name: string) {
+    api.createBoard({
+      name
+    }).then(board => {
+      setLocalState({
+        ...localState,
+        boards: boards.concat([board])
+      });
+    });
+  }
+
+  function createTeam(name: string) {
+    api.createTeam({
+      name
+    }).then(team => {
+      setLocalState({
+        ...localState,
+        teams: teams.concat([team])
+      });
+    });
+  }
+
+  function refreshActivities() {
+    // TODO: Query new activities
+  }
 
   function getLastTimeOpen(boardId: string) {
     const h = localState.history.find(h => h.boardId == boardId);
@@ -213,76 +239,99 @@ export default function HomePage() {
   }
 
   return (
-    <Fragment>
-      <div className="row h-100">
-        <div className="col-3 sidebar pt-3 px-3 border-right d-none d-sm-none d-md-block pt-3">
-          <div className="d-flex flex-row align-items-center justify-content-between">
-            <span>Teams</span>
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm">
-              New
-            </button>
-          </div>
-          <div className="input-group input-group-sm mt-2">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Find a team..."
-              value={searchState.team}
-              onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
-              aria-label="Team"/>
-          </div>
-          <div className="d-flex flex-column mt-2">
-            {localState.teams.filter(t => includesIgnoreCase(t.name, searchState.team)).map(team =>
-              <Link
-                className="mt-2"
-                to={`team/${team.id}`}>
-                {team.name}
-              </Link>
-            )}
-          </div>
-          <hr className="my-3"/>
-          <div className="d-flex flex-row align-items-center justify-content-between">
-            <span>Boards</span>
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm">
-              New
-            </button>
-          </div>
-          <div className="input-group input-group-sm mt-2">
-            <input
-              type="text"
-              className="form-control"
-              value={searchState.board}
-              onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
-              placeholder="Find a board..."
-              aria-label="Board"/>
-          </div>
-          <div className="d-flex flex-column mt-2">
-            {localState.boards.filter(b => includesIgnoreCase(b.name, searchState.board)).map(board =>
-              <Link
-                className="mt-2"
-                to={`board/${board.id}`}>
-                {board.name}
-              </Link>
-            )}
-          </div>
-        </div>
-        <main className="col-sm bg-light pt-3 px-3">
-        </main>
-        <div className="overflow-auto col-3 sidebar pt-3 px-3 border-left d-none d-sm-none d-md-none d-lg-block h-100">
-          <div className="mb-2">
-            <span>Activity</span>
-          </div>
-          {localState.activities.map(activity =>
-            <div className="mb-3">
-              <ActivityComponent activity={activity}/>
+    <div className="container-fluid h-100 bg-light overflow-auto">
+      <div className="container h-100">
+        <div className="row h-100">
+          <div className="col-sm col-md-4 col-lg-3 pt-3 px-3 pt-3">
+            <div className="sticky-top">
+              <div className="d-flex flex-row align-items-center justify-content-between">
+                <span>Teams</span>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm">
+                  New
+                </button>
+              </div>
+              <div className="input-group input-group-sm mt-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Find a team..."
+                  value={searchState.team}
+                  onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
+                  aria-label="Team"/>
+              </div>
+              <div className="d-flex flex-column mt-2">
+                {localState.teams.filter(t => includesIgnoreCase(t.name, searchState.team)).map(team =>
+                  <Link
+                    className="mt-2"
+                    to={`team/${team.id}`}>
+                    {team.name}
+                  </Link>
+                )}
+              </div>
+              <hr className="my-3"/>
+              <div className="d-flex flex-row align-items-center justify-content-between">
+                <span>Boards</span>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm">
+                  New
+                </button>
+              </div>
+              <div className="input-group input-group-sm mt-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  value={searchState.board}
+                  onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
+                  placeholder="Find a board..."
+                  aria-label="Board"/>
+              </div>
+              <div className="d-flex flex-column mt-2">
+                {localState.boards.filter(b => includesIgnoreCase(b.name, searchState.board)).map(board =>
+                  <Link
+                    className="mt-2"
+                    to={`board/${board.id}`}>
+                    {board.name}
+                  </Link>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+          <main className="col flex-column bg-white pt-3 px-3 border-left border-right d-none d-sm-none d-md-flex">
+            <div className="mb-2 d-flex flex-row align-items-center justify-content-between">
+              <span>Activity</span>
+              <button
+                className="btn btn-outline-primary btn-sm float-right"
+                onClick={() => refreshActivities()}>
+                Refresh
+              </button>
+            </div>
+            {localState.activities.map(activity =>
+              <div className="mb-3">
+                <ActivityComponent activity={activity}/>
+              </div>
+            )}
+          </main>
+          <div className="col-3 pt-3 px-3 d-none d-sm-none d-md-none d-lg-block">
+            <div className="sticky-top">
+              <div>
+                <span>Recents</span>
+              </div>
+              <div className="d-flex flex-column">
+                {localState.history.map(entry =>
+                  <Link
+                    className="mt-2"
+                    to={`board/${entry.board.id}`}>
+                    {entry.board.name}
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 }

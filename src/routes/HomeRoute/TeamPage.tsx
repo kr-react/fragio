@@ -10,21 +10,10 @@ import {
   Board,
 } from "../../common";
 
-import {
-  Avatar,
-  Button,
-  ButtonGroup,
-  Layout,
-  Grid,
-  Text,
-  Tabs,
-  Table,
-} from "../../lazuli";
-
-export default function TeamPage(props: { id: string }) {
-  const api = new FragioAPI(process.env.API_URL, window.localStorage.getItem("token"));
+export default function TeamPage({ match }) {
+  const { user, token } = useSelector<ApplicationState>(state => state);
+  const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
-  const globalState = useSelector<ApplicationState>(state => state);
   const [localState, setLocalState] = useState<{
     team: Team,
     boards: Board[],
@@ -32,10 +21,10 @@ export default function TeamPage(props: { id: string }) {
   }>(undefined);
 
   useEffect(() => {
-    async function apiRequest() {
-      const team = await api.getTeam(props.id);
-      const members = await api.getTeamMembers(props.id);
-      const boards = await api.getTeamBoards(props.id);
+    async function request() {
+      const team = await api.getTeam(match.params.id);
+      const members = await api.getTeamMembers(match.params.id);
+      const boards = await api.getTeamBoards(match.params.id);
 
       if (team && members && boards) {
         setLocalState({
@@ -49,14 +38,8 @@ export default function TeamPage(props: { id: string }) {
       }
     }
 
-    apiRequest();
+    request();
   }, []);
-
-  if (localState === null) {
-    return <div>Loading</div>;
-  } else if (localState === undefined) {
-    return <div>Not Found</div>;
-  }
 
   function removeMember(username: string) {
     api.leaveTeam(localState.team.id, username).then(() => {
@@ -67,140 +50,11 @@ export default function TeamPage(props: { id: string }) {
     });
   }
 
-  return (
-    <Grid rows={["53px", "auto"]}>
-      <Layout className="border-bottom flex-row flex-align-center flex-justify-between overflow-x-auto"
-        style={{padding: "10px 20px"}}>
-        <Text className="nowrap" content={localState.team.name} weight="bold" size="1.2rem"
-          style={{marginRight: "10px"}}/>
-        <ButtonGroup className="self-flex-end" type="space-between">
-          {(globalState.user && localState.members.some(m => m.userId == globalState.user.id)) &&
-            <Button type="primary" text="Leave" onClick={() => removeMember(globalState.user.username)}/>
-          }
-          <Button type="primary" text="Delete" onClick={() => {
-            api.deleteTeam(localState.team.id)
-              .then(() => {
-                if (history.length > 1) {
-                  history.goBack();
-                } else {
-                  history.push("/");
-                }
-              });
-          }}/>
-        </ButtonGroup>
-      </Layout>
-      <main className="overflow-y-auto p20 color-secondary">
-        <Tabs defaultIndex={0}>
-          {[
-            {
-              name: "Boards",
-              component: (
-                <Table sources={localState.boards.map(board => {
-                  return {
-                    key: board.id,
-                    unselectable: false,
-                    fields: {
-                      name: <Link to={`/board/${board.id}`}>{board.name}</Link>,
-                      owner: board.owner.name,
-                      avatar: (
-                        <Avatar src={board.owner.imageUrl} style={{
-                          width: "25px",
-                          height: "25px"
-                        }}/>
-                      )
-                    }
-                  };
-                })}
-                columns={[
-                  {
-                    title: "",
-                    field: "avatar",
-                    style: {
-                      width: 0
-                    }
-                  },
-                  {
-                    title: "Owner",
-                    field: "owner",
-                    style: {
-                      width: 0
-                    }
-                  },
-                  {
-                    title: "Name",
-                    field: "name",
-                  }
-                ]}/>
-              )
-            },
-            {
-              name: "Members",
-              component: (
-                <React.Fragment>
-                  <Table sources={localState.members.map(member => {
-                    return {
-                      key: member.id,
-                      unselectable: false,
-                      fields: {
-                        avatar: (
-                          <Avatar src={member.user.imageUrl} style={{
-                            width: "25px",
-                            height: "25px"
-                          }}/>
-                        ),
-                        name: member.user.name,
-                        remove: globalState.user && globalState.user.id == localState.team.ownerId ? (
-                          <Button type="primary" text="Remove"
-                            onClick={() => removeMember(member.user.username)}/>
-                        ) : undefined
-                      }
-                    };
-                  })}
-                  columns={[
-                    {
-                      title: "",
-                      field: "avatar",
-                      style: {
-                        width: 0
-                      }
-                    },
-                    {
-                      title: "Name",
-                      field: "name",
-                      style: {
-                        width: 0
-                      }
-                    },
-                    {
-                      title: "",
-                      field: "remove",
-                      style: {
-                        textAlign: "right"
-                      }
-                    }
-                  ]}/>
-                  {globalState.user &&
-                    <form enctype="multipart/form-data" onSubmit={e => {
-                      e.preventDefault();
-                      const data = new FormData(e.currentTarget)
-                      api.joinTeam(localState.team.id, data.get("username"))
-                        .then(member => {
-                          setLocalState({
-                            ...localState,
-                            members: localState.members.concat([member])
-                          });
-                        });
-                    }}>
-                      <input name="username" aria-label="username" type="text"/>
-                      <input type="submit" value="Invite"/>
-                    </form>
-                  }
-                </React.Fragment>
-              )
-            },
-          ]}
-        </Tabs>
-      </main>
-    </Grid>
-  );
+  if (localState === null) {
+    return <div>Not Found</div>;
+  } else if (localState === undefined) {
+    return <div>Loading</div>;
+  }
+
+  return <div>{localState.team.name}</div>;
 }
