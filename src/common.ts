@@ -209,6 +209,13 @@ export class FragioAPI {
     return Promise.resolve(null);
   }
 
+  async createAccount(data: any) : Promise<string> {
+    return this.request("api/v1/auth/new", {
+      method: "POST",
+      body: data
+    }, data => data.token);
+  }
+
   async getToken(username: string, password: string) : Promise<string> {
     return this.request("api/v1/auth/auth", {
       method: "POST",

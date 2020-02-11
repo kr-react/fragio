@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ApplicationState, QueryString, FragioAPI } from "../../common";
@@ -26,9 +26,9 @@ export default function LoginRoute({ match }) {
   const qString = new QueryString(location.href);
   const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispatch = useDispatch();
-  const [state, setState] = useState(0);
+  const [state, setState] = React.useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (token.token)
       login(token.storage);
   }, []);
@@ -48,22 +48,22 @@ export default function LoginRoute({ match }) {
     }
   }
 
-  async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const token = await api.getToken(data.get("username"), data.get("password"));
-    const remember = data.get("remember-me") == "remember";
-
-    if (!token)
-      return false;
-
-    if (token) {
-      api.token = token;
-      await login(remember ? "local" : "session");
-    }
-  }
-
   function LoginForm() {
+    async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+      const token = await api.getToken(data.get("username"), data.get("password"));
+      const remember = data.get("remember-me") == "remember";
+
+      if (!token)
+        return false;
+
+      if (token) {
+        api.token = token;
+        await login(remember ? "local" : "session");
+      }
+    }
+
     return (
       <form onSubmit={onSubmitHandler}>
         <div className="form-group">
@@ -74,6 +74,7 @@ export default function LoginRoute({ match }) {
             className="form-control"
             autofocus
             autocomplete="username"
+            required
             type="text"/>
         </div>
         <div className="form-group">
@@ -83,6 +84,7 @@ export default function LoginRoute({ match }) {
             name="password"
             className="form-control"
             autocomplete="current-password"
+            required
             type="password"/>
         </div>
         <div className="form-group form-check">
@@ -102,6 +104,79 @@ export default function LoginRoute({ match }) {
           className="btn btn-primary"
           type="submit">
           Login
+        </button>
+      </form>
+    );
+  }
+
+  function SignUpForm() {
+    async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+      const token = await api.createAccount({
+        name: data.get("name"),
+        username: data.get("username"),
+        email: data.get("email"),
+        password: data.get("password")
+      });
+
+      if (token) {
+        api.token = token;
+        await login("session");
+      }
+    }
+
+    return (
+      <form onSubmit={onSubmitHandler}>
+        <div className="form-group">
+          <label for="name">Name</label>
+          <input
+            id="name"
+            name="name"
+            className="form-control"
+            autofocus
+            required
+            autocomplete="name"
+            maxlength="100"
+            type="text"/>
+        </div>
+        <div className="form-group">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            name="username"
+            className="form-control"
+            required
+            autocomplete="username"
+            maxlength="100"
+            type="text"/>
+        </div>
+        <div className="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            className="form-control"
+            required
+            autocomplete="email"
+            pattern=".+@.+"
+            maxlength="100"
+            type="email"/>
+        </div>
+        <div className="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            className="form-control"
+            required
+            pattern=".{8,100}"
+            type="password"/>
+        </div>
+        <button
+          className="btn btn-primary"
+          type="submit">
+          Create Account
         </button>
       </form>
     );
@@ -137,6 +212,9 @@ export default function LoginRoute({ match }) {
                 </ul>
                 {state === 0 &&
                   <LoginForm/>
+                }
+                {state === 1 &&
+                  <SignUpForm/>
                 }
               </div>
             </div>
