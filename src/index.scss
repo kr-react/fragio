@@ -1,3 +1,8 @@
+* {
+  scrollbar-color: #CCCCCC #ECECEC;
+  scrollbar-width: auto;
+}
+
 html, body, #root {
   width: 100vw;
   height: 100vh;
@@ -19,9 +24,3 @@ html, body, #root {
 }
 
 .pointer { cursor: pointer; }
-
-// Bootstrap override
-
-.sticky-top {
-  top: 1rem !important;
-}
