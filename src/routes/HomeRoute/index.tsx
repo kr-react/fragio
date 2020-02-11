@@ -6,6 +6,8 @@ import { Redirect } from "react-router-dom";
 import HomePage from "./HomePage.tsx";
 import BoardPage from "./BoardPage.tsx";
 import TeamPage from "./TeamPage.tsx";
+import NewBoardPage from "./NewBoardPage.tsx";
+import NewTeamPage from "./NewTeamPage.tsx";
 
 import {
   ApplicationState,
@@ -65,7 +67,11 @@ export default function HomeRoute({ match }) {
         <Route exact path="/" component={HomePage}/>
         <Route exact path="/board/:id" component={BoardPage}/>
         <Route exact path="/team/:id" component={TeamPage}/>
+        <Route exact path="/newboard" component={NewBoardPage}/>
+        <Route exact path="/newteam" component={NewTeamPage}/>
       </Switch>
     </div>
   );
 }
+
+// <Route exact path="/newteam" component={NewTeamPage}/>

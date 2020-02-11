@@ -54,6 +54,8 @@ function update(store: Store<ApplicationState, ReduxAction>) {
             <Route exact path="/" component={HomeRoute}/>
             <Route exact path="/board/:id" component={HomeRoute}/>
             <Route exact path="/team/:id" component={HomeRoute}/>
+            <Route exact path="/newboard" component={HomeRoute}/>
+            <Route exact path="/newteam" component={HomeRoute}/>
             <Route exact path="/login" component={LoginRoute}/>
           </Switch>
         </BrowserRouter>
