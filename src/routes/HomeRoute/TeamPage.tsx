@@ -10,6 +10,34 @@ import {
   Board,
 } from "../../common";
 
+function Footer(props: { className: string }) {
+  const date = new Date();
+
+  return (
+    <footer className={props.className}>
+      <hr className="my-4"/>
+      <div className="d-flex flex-row align-items-center justify-content-between text-muted">
+        <div className="w-100 text-left d-none d-md-block">
+          {`© ${date.getFullYear()} Fragio, Inc.`}
+        </div>
+        <h6 className="m-0 w-100 text-left d-md-none">
+          <b>Fragio</b>
+        </h6>
+        <h6 className="m-0 w-100 text-center d-none d-md-inline-block">
+          <b>Fragio</b>
+        </h6>
+        <div className="w-100 text-right">
+          <a
+            href="https://github.com/happotato/fragio"
+            target="blank">
+            Source Code
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export default function TeamPage({ match }) {
   const { user, token } = useSelector<ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
@@ -126,8 +154,8 @@ export default function TeamPage({ match }) {
               className="nav-item pointer"
               onClick={() => setTab(1)}>
               <span className={`nav-link${localState.selectedTab === 1 ? " active" : ""}`}>
-                <span>Boards </span>
-                <span className="badge badge-secondary">
+                <span>Boards</span>
+                <span className="ml-2 badge badge-secondary">
                   {localState.boards.length}
                 </span>
               </span>
@@ -136,8 +164,8 @@ export default function TeamPage({ match }) {
               className="nav-item pointer"
               onClick={() => setTab(2)}>
               <span className={`nav-link${localState.selectedTab === 2 ? " active" : ""}`}>
-                <span>Members </span>
-                <span className="badge badge-secondary">
+                <span>Members</span>
+                <span className="ml-2 badge badge-secondary">
                   {localState.members.length}
                 </span>
               </span>
@@ -152,10 +180,10 @@ export default function TeamPage({ match }) {
           </ul>
         </div>
       </div>
-      <main className="container py-4">
+      <main className="container pt-4">
         {localState.selectedTab == 1 && <BoardsTab/>}
-        <hr className="my-4"/>
       </main>
+      <Footer className="container"/>
     </React.Fragment>
   );
 }

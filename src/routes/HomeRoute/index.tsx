@@ -48,8 +48,8 @@ export default function HomeRoute({ match }) {
               <img
                 className="ml-3 rounded"
                 src={user.imageUrl}
-                width="30"
-                height="30"/>
+                width="25"
+                height="25"/>
             </div>
             <div
               className="dropdown-menu"
