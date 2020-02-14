@@ -4,33 +4,8 @@ export interface ReduxAction {
 }
 
 export class ApplicationState {
-  static ViewModes = [
-    {
-      name: "Desktop",
-      breakpoint: 992,
-    },
-    {
-      name: "Tablet",
-      breakpoint: 768,
-    },
-    {
-      name: "Mobile",
-      breakpoint: 0,
-    }
-  ];
-
-  viewMode: string;
   token?: string;
   user?: User;
-
-  constructor() {
-    for (const viewMode of ApplicationState.ViewModes) {
-      if (window.innerWidth > viewMode.breakpoint) {
-        this.viewMode = viewMode.name;
-        break;
-      }
-    }
-  }
 };
 
 export class QueryString {
@@ -225,6 +200,12 @@ export class FragioAPI {
 
   async getCurrentUser() : Promise<User> {
     return this.request("api/v1/user", {
+      useToken: true
+    });
+  }
+
+  async getUser(username: string) : Promise<User> {
+    return this.request(`api/v1/user/${username}`, {
       useToken: true
     });
   }

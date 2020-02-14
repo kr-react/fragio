@@ -10,6 +10,10 @@ html, body, #root {
   max-height: 100vh;
 }
 
+body {
+  font-size: .9rem !important;
+}
+
 .app-activity {
   & > .card-header,
   & > .card-footer {

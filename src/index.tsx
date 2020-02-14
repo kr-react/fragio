@@ -6,8 +6,8 @@ import { createStore,Store } from "redux";
 import { ApplicationState, ReduxAction } from "./common";
 
 require("bootstrap");
-import "./index.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./index.scss";
 
 // Routes
 import HomeRoute from "./routes/HomeRoute/";
@@ -35,11 +35,6 @@ function appReducer(state: ApplicationState = new ApplicationState, action: Redu
       token: null,
       user: null
     };
-  } else if (action.type == "VIEWMODE_CHANGE") {
-    return {
-      ...state,
-      viewMode: action.data
-    };
   }
 
   return state;
@@ -54,6 +49,7 @@ function update(store: Store<ApplicationState, ReduxAction>) {
             <Route exact path="/" component={HomeRoute}/>
             <Route exact path="/board/:id" component={HomeRoute}/>
             <Route exact path="/team/:id" component={HomeRoute}/>
+            <Route exact path="/user/:username" component={HomeRoute}/>
             <Route exact path="/newboard" component={HomeRoute}/>
             <Route exact path="/newteam" component={HomeRoute}/>
             <Route exact path="/login" component={LoginRoute}/>
@@ -68,17 +64,3 @@ function update(store: Store<ApplicationState, ReduxAction>) {
 const store = createStore(appReducer);
 store.subscribe(() => update(store));
 update(store);
-
-for (let i = 0; i < ApplicationState.ViewModes.length; i++) {
-  const min = `${ApplicationState.ViewModes[i].breakpoint}px`;
-  const max = i > 0 ? `${ApplicationState.ViewModes[i - 1].breakpoint}px` : undefined;
-  const media = window.matchMedia(`(min-width: ${min})${max ? ` and (max-width: ${max})` : ""}`);
-
-  media.addListener(e => {
-    if (!e.matches) return;
-    store.dispatch({
-      type: "VIEWMODE_CHANGE",
-      data: ApplicationState.ViewModes[i].name
-    });
-  });
-}
