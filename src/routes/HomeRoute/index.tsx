@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Switch, Route, Link } from "react-router-dom";
-import { Redirect } from "react-router-dom";
+import { Link, Redirect, Switch, Route } from "react-router-dom";
 
 import HomePage from "./HomePage.tsx";
 import BoardPage from "./BoardPage.tsx";
@@ -54,6 +53,11 @@ export default function HomeRoute({ match }) {
             <div
               className="dropdown-menu"
               aria-labelledby="userctl-dropdown-toggle">
+              <Link
+                className="dropdown-item"
+                to={`/user/${user.username}`}>
+                Perfil
+              </Link>
               <div class="dropdown-divider"></div>
               <span
                 className="dropdown-item pointer"
