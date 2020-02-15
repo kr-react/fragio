@@ -2,7 +2,7 @@ import * as React from "react";
 import * as moment from "moment";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-
+import { ActivityComponent, Footer } from "~/src/components";
 import {
   FragioAPI,
   ApplicationState,
@@ -11,35 +11,7 @@ import {
   Board,
   User,
   Activity
-} from "../../common";
-
-function Footer(props: { className: string }) {
-  const date = new Date();
-
-  return (
-    <footer className={props.className}>
-      <hr className="my-4"/>
-      <div className="d-flex flex-row align-items-center justify-content-between text-muted pb-4">
-        <div className="w-100 text-left d-none d-md-block">
-          {`© ${date.getFullYear()} Fragio, Inc.`}
-        </div>
-        <h6 className="m-0 w-100 text-left d-md-none">
-          <b>{process.env.APP_NAME}</b>
-        </h6>
-        <h6 className="m-0 w-100 text-center d-none d-md-inline-block">
-          <b>{process.env.APP_NAME}</b>
-        </h6>
-        <div className="w-100 text-right">
-          <a
-            href="https://github.com/happotato/fragio"
-            target="blank">
-            Source Code
-          </a>
-        </div>
-      </div>
-    </footer>
-  );
-}
+} from "~/src/common";
 
 export default function TeamPage({ match }) {
   const { user, token } = useSelector<ApplicationState>(state => state);
@@ -111,7 +83,8 @@ export default function TeamPage({ match }) {
     const [searchText, setSearchText] = React.useState("");
     const activities = localState.activities.filter(activity => {
       const text = searchText.toLowerCase();
-      return activity.user.username.toLowerCase().includes(text);
+      return activity.user.name.toLowerCase().includes(text)
+      || activity.user.username.toLowerCase().includes(text);
     });
 
     return (
@@ -132,29 +105,12 @@ export default function TeamPage({ match }) {
             </div>
           </div>
           <ul className="list-group list-group-flush">
-            {activities.map(activity =>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span className="d-flex flex-row align-items-center">
-                  <Link
-                    className="d-flex flex-row align-items-center"
-                    to={`/user/${activity.user.username}`}>
-                    <img
-                      className="rounded mr-3"
-                      src={activity.user.imageUrl}
-                      width="25"
-                      height="25"/>
-                    <span>{activity.user.name}</span>
-                  </Link>
-                  {isOwner(activity.user) &&
-                    <span className="ml-2 badge badge-secondary">
-                      Owner
-                    </span>
-                  }
-                </span>
-                <span className="text-nowrap">
-                  {moment(activity.createdAt).fromNow()}
-                </span>
-              </li>
+            {activities.map(activity => 
+              <ActivityComponent
+                as={"li"}
+                className="list-group-item"
+                activity={activity}
+                compact/>
             )}
           </ul>
         </div>

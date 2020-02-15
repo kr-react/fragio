@@ -18,7 +18,10 @@ module.exports = {
     pathinfo: false
   },
   resolve: {
-    extensions: [".js", ".ts", ".tsx"]
+    extensions: [".js", ".ts", ".tsx"],
+    alias: {
+      ['~']: __dirname
+    }
   },
   module: {
     rules: [

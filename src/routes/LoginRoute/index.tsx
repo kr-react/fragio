@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ApplicationState, QueryString, FragioAPI } from "../../common";
+import { ApplicationState, QueryString, FragioAPI } from "~/src/common";
 
 function getTokenFromStorage() {
   const localToken = localStorage.getItem("token");

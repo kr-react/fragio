@@ -1,21 +1,20 @@
-import { useEffect, useState, FormEvent, HTMLFormElement } from "react";
+import * as React from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-
 import {
   ApplicationState,
   User,
   Team,
   Board,
   FragioAPI,
-} from "../../common";
+} from "~/src/common";
 
 export default function NewBoardPage({ match }) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
 
-  function onSubmitHandler(e: FormEvent<HTMLFormElement>) {
+  function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
 

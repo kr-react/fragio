@@ -6,7 +6,7 @@ import {
   FragioAPI,
   ApplicationState,
   User
-} from "../../common";
+} from "~/src/common";
 
 export default function UserPage({ match }) {
   const { user, token } = useSelector<ApplicationState>(state => state);

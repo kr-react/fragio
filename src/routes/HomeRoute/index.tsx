@@ -1,18 +1,16 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, Redirect, Switch, Route } from "react-router-dom";
-
+import {
+  ApplicationState,
+  User,
+} from "~/src/common";
 import HomePage from "./HomePage.tsx";
 import BoardPage from "./BoardPage.tsx";
 import TeamPage from "./TeamPage.tsx";
 import UserPage from "./UserPage.tsx";
 import NewBoardPage from "./NewBoardPage.tsx";
 import NewTeamPage from "./NewTeamPage.tsx";
-
-import {
-  ApplicationState,
-  User,
-} from "../../common";
 
 export default function HomeRoute({ match }) {
   const dispatch = useDispatch();

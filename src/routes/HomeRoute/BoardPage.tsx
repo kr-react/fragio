@@ -1,32 +1,29 @@
-import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import * as React from "react";
+import { useSelector } from "react-redux";
 import { Link, Redirect, useHistory } from "react-router-dom";
-
 import {
   ApplicationState,
+  FragioAPI,
   User,
   Team,
   Board,
   List,
   Card,
   Label,
-  FragioAPI,
-} from "../../common";
+} from "~/src/common";
 
 export default function BoardPage({ match }) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
-  const [localState, setLocalState] = useState<{
+  const [localState, setLocalState] = React.useState<{
     board: Board,
     lists: List[],
     cards: Card[],
     teams: Team[],
-    isPaneOpen: boolean,
-    selectedCard: number,
   }>(undefined);
 
-  useEffect(() => {
+  React.useEffect(() => {
     async function request() {
       const board = await api.getBoard(match.params.id);
       const lists = await api.getLists(match.params.id);
@@ -39,8 +36,6 @@ export default function BoardPage({ match }) {
           lists,
           cards,
           teams,
-          isPaneOpen: false,
-          selectedCard: undefined,
         });
 
         document.title = `${board.name} - ${process.env.APP_NAME}`
@@ -62,19 +57,6 @@ export default function BoardPage({ match }) {
 
   function isOwner() {
     return globalState.user && localState.board.ownerId == globalState.user.id;
-  }
-
-  function getLabels(ids: string[]) {
-    const a = [...localState.board.labels]
-      .filter(label => ids.includes(label.id))
-      .sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
-
-    return a;
-  }
-
-  function getAvailableLabels(ids: string[]) {
-    return localState.board.labels
-      .filter(label => !ids.includes(label.id));
   }
 
   if (localState === null) {
