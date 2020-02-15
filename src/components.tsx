@@ -182,7 +182,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
   if (props.compact) {
     element = (
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex align-items-center overflow-hidden text-nowrap text-muted">
         <span className="d-flex flex-row align-items-center">
           <Link
             className="d-flex flex-row align-items-center"
@@ -195,7 +195,10 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <span>{activity.user.name}</span>
           </Link>
         </span>
-        <span className="text-nowrap text-muted">
+        <span className="ml-3 mr-auto overflow-hidden text-truncate">
+          {getBody()}
+        </span>
+        <span className="ml-3">
           {moment(activity.createdAt).fromNow()}
         </span>
       </div>
