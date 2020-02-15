@@ -176,7 +176,7 @@ function ActivityComponent(props: { activity: Activity }) {
 
   return (
     <div className="app-activity card shadow-sm">
-      <div className="card-header">
+      <div className="card-header p-2">
         <img
           className="rounded mr-2"
           width="30px"
@@ -185,10 +185,10 @@ function ActivityComponent(props: { activity: Activity }) {
           src={activity.user.imageUrl}/>
         <span>{activity.user.name}</span>
       </div>
-      <div className="card-body text-muted">
+      <div className="card-body text-muted px-2 py-1">
         {getBody()}
       </div>
-      <div className="card-footer text-muted">
+      <div className="card-footer text-muted p-2">
         <span>{activity.team.name}</span>
         <span className="float-right">
           {moment(activity.createdAt).fromNow()}

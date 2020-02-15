@@ -260,6 +260,14 @@ export class FragioAPI {
     });
   }
 
+  async updateTeam(teamId: string, data: any) : Promise<Team> {
+    return this.request(`api/v1/team/${teamId}`, {
+      method: "PATCH",
+      useToken: true,
+      body: data
+    });
+  }
+
   async getTeam(teamId: string) : Promise<Team> {
     return this.request(`api/v1/team/${teamId}`, {
       method: "GET",
@@ -276,6 +284,13 @@ export class FragioAPI {
 
   async getTeamBoards(teamId: string) : Promise<Board[]> {
     return this.request(`api/v1/team/${teamId}/boards`, {
+      method: "GET",
+      useToken: true,
+    });
+  }
+
+  async getTeamActivities(teamId: string) : Promise<Activity[]> {
+    return this.request(`api/v1/team/${teamId}/activity`, {
       method: "GET",
       useToken: true,
     });

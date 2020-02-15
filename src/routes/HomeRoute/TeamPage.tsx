@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Link, Redirect, useHistory } from "react-router-dom";
+import * as moment from "moment";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 import {
   FragioAPI,
@@ -8,6 +9,8 @@ import {
   Team,
   Member,
   Board,
+  User,
+  Activity
 } from "../../common";
 
 function Footer(props: { className: string }) {
@@ -16,15 +19,15 @@ function Footer(props: { className: string }) {
   return (
     <footer className={props.className}>
       <hr className="my-4"/>
-      <div className="d-flex flex-row align-items-center justify-content-between text-muted">
+      <div className="d-flex flex-row align-items-center justify-content-between text-muted pb-4">
         <div className="w-100 text-left d-none d-md-block">
           {`© ${date.getFullYear()} Fragio, Inc.`}
         </div>
         <h6 className="m-0 w-100 text-left d-md-none">
-          <b>Fragio</b>
+          <b>{process.env.APP_NAME}</b>
         </h6>
         <h6 className="m-0 w-100 text-center d-none d-md-inline-block">
-          <b>Fragio</b>
+          <b>{process.env.APP_NAME}</b>
         </h6>
         <div className="w-100 text-right">
           <a
@@ -41,11 +44,11 @@ function Footer(props: { className: string }) {
 export default function TeamPage({ match }) {
   const { user, token } = useSelector<ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
-  const history = useHistory();
   const [localState, setLocalState] = React.useState<{
     team: Team,
     boards: Board[],
     members: Member[],
+    activities: Activity[],
     selectedTab: number
   }>(undefined);
 
@@ -54,12 +57,14 @@ export default function TeamPage({ match }) {
       const team = await api.getTeam(match.params.id);
       const members = await api.getTeamMembers(match.params.id);
       const boards = await api.getTeamBoards(match.params.id);
+      const activities = await api.getTeamActivities(match.params.id);
 
-      if (team && members && boards) {
+      if (team && members && boards && activities) {
         setLocalState({
           team,
           members,
           boards,
+          activities,
           selectedTab: 0
         });
         document.title = `${team.name} - ${process.env.APP_NAME}`;
@@ -71,11 +76,26 @@ export default function TeamPage({ match }) {
     request();
   }, []);
 
+  function isOwner(u: User) {
+    return u && u.id == localState.team.owner.id;
+  }
+
   function removeMember(username: string) {
     api.leaveTeam(localState.team.id, username).then(() => {
       setLocalState({
         ...localState,
         members: localState.members.filter(member => member.user.username != username)
+      });
+    });
+  }
+
+  function removeBoard(id: string) {
+    api.updateBoard(id, {
+      teamId: null
+    }).then(() => {
+      setLocalState({
+        ...localState,
+        boards: localState.boards.filter(board => board.id != id)
       });
     });
   }
@@ -87,6 +107,62 @@ export default function TeamPage({ match }) {
     });
   }
 
+  function ActivitiesTab() {
+    const [searchText, setSearchText] = React.useState("");
+    const activities = localState.activities.filter(activity => {
+      const text = searchText.toLowerCase();
+      return activity.user.username.toLowerCase().includes(text);
+    });
+
+    return (
+      <React.Fragment>
+        <div className="card">
+          <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
+            <b className="text-nowrap">{`${activities.length} activities`}</b>
+            <div className="input-group input-group-sm ml-4">
+              <div className="input-group-prepend">
+                <span className="input-group-text">Search</span>
+              </div>
+              <input
+                className="form-control"
+                type="text"
+                placeholder="Search all activities"
+                aria-label="Search"
+                onChange={e => setSearchText(e.currentTarget.value)}/>
+            </div>
+          </div>
+          <ul className="list-group list-group-flush">
+            {activities.map(activity =>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span className="d-flex flex-row align-items-center">
+                  <Link
+                    className="d-flex flex-row align-items-center"
+                    to={`/user/${activity.user.username}`}>
+                    <img
+                      className="rounded mr-3"
+                      src={activity.user.imageUrl}
+                      width="25"
+                      height="25"/>
+                    <span>{activity.user.name}</span>
+                  </Link>
+                  {isOwner(activity.user) &&
+                    <span className="ml-2 badge badge-secondary">
+                      Owner
+                    </span>
+                  }
+                </span>
+                <span className="text-nowrap">
+                  {moment(activity.createdAt).fromNow()}
+                </span>
+              </li>
+            )}
+          </ul>
+        </div>
+      </React.Fragment>
+
+    );
+  }
+
   function BoardsTab() {
     const [searchText, setSearchText] = React.useState("");
     const boards = localState.boards.filter(board => {
@@ -96,8 +172,8 @@ export default function TeamPage({ match }) {
     return (
       <React.Fragment>
         <div className="card">
-          <div className="card-header d-flex flex-row justify-content-between align-items-center">
-            <b className="text-nowrap">{`${boards.length} board(s)`}</b>
+          <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
+            <b className="text-nowrap">{`${boards.length} boards`}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
                 <span className="input-group-text">Search</span>
@@ -113,16 +189,133 @@ export default function TeamPage({ match }) {
           <ul className="list-group list-group-flush">
             {boards.map(board =>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <Link to={`board/${board.id}`}>
+                <Link to={`/board/${board.id}`}>
                   {board.name}
                 </Link>
-                <button className="btn btn-outline-danger btn-sm">
-                  Delete
-                </Button>
+                {isOwner(user) &&
+                  <button
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => removeBoard(board.id)}>
+                    Remove
+                  </button>
+                }
               </li>
             )}
           </ul>
         </div>
+      </React.Fragment>
+    );
+  }
+
+  function MembersTab() {
+    const [searchText, setSearchText] = React.useState("");
+    const members = localState.members.filter(member => {
+      return member.user.name.toLowerCase().includes(searchText.toLowerCase());
+    });
+
+    return (
+      <React.Fragment>
+        <div className="card">
+          <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
+            <b className="text-nowrap">{`${members.length} members`}</b>
+            <div className="input-group input-group-sm ml-4">
+              <div className="input-group-prepend">
+                <span className="input-group-text">Search</span>
+              </div>
+              <input
+                className="form-control"
+                type="text"
+                placeholder="Search all members"
+                aria-label="Search"
+                onChange={e => setSearchText(e.currentTarget.value)}/>
+            </div>
+          </div>
+          <ul className="list-group list-group-flush">
+            {members.map(member =>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span className="d-flex flex-row align-items-center">
+                  <Link
+                    className="d-flex flex-row align-items-center"
+                    to={`/user/${member.user.username}`}>
+                    <img
+                      className="rounded mr-3"
+                      src={member.user.imageUrl}
+                      width="25"
+                      height="25"/>
+                    <span>{member.user.name}</span>
+                  </Link>
+                  {isOwner(member.user) &&
+                    <span className="ml-2 badge badge-secondary">
+                      Owner
+                    </span>
+                  }
+                </span>
+                {(isOwner(user) && !isOwner(member.user)) &&
+                  <button
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => removeMember(member.user.username)}>
+                    Remove
+                  </button>
+                }
+              </li>
+            )}
+          </ul>
+        </div>
+      </React.Fragment>
+    );
+  }
+
+  function SettingsTab() {
+    function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+
+      api.updateTeam(localState.team.id, {
+        name: data.get("name"),
+        imageUrl: data.get("imageUrl")
+      }).then(team => {
+        setLocalState({
+          ...localState,
+          team
+        });
+      });
+    }
+
+    return (
+      <React.Fragment>
+        <h4>Settings</h4>
+        <hr/>
+        <form onSubmit={onSubmitHandler}>
+          <div className="form-group">
+            <label
+              for="rename-input">
+              Team name
+            </label>
+            <input
+              id="rename-input"
+              type="text"
+              name="name"
+              className="form-control form-control-sm"
+              defaultValue={localState.team.name}/>
+          </div>
+          <div className="form-group">
+            <label
+              for="image-url-input">
+              Image url
+            </label>
+            <input
+              id="image-url-input"
+              type="url"
+              name="imageUrl"
+              className="form-control form-control-sm"
+              defaultValue={localState.team.imageUrl}/>
+          </div>
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm">
+            Save
+          </button>
+        </form>
       </React.Fragment>
     );
   }
@@ -170,18 +363,23 @@ export default function TeamPage({ match }) {
                 </span>
               </span>
             </li>
-            <li
-              className="nav-item pointer"
-              onClick={() => setTab(3)}>
-              <span className={`nav-link${localState.selectedTab === 3 ? " active" : ""}`}>
-                <span>Settings</span>
-              </span>
-            </li>
+            {isOwner(user) &&
+              <li
+                className="nav-item pointer"
+                onClick={() => setTab(3)}>
+                <span className={`nav-link${localState.selectedTab === 3 ? " active" : ""}`}>
+                  <span>Settings</span>
+                </span>
+              </li>
+            }
           </ul>
         </div>
       </div>
       <main className="container pt-4">
+        {localState.selectedTab == 0 && <ActivitiesTab/>}
         {localState.selectedTab == 1 && <BoardsTab/>}
+        {localState.selectedTab == 2 && <MembersTab/>}
+        {(isOwner(user) && localState.selectedTab == 3) && <SettingsTab/>}
       </main>
       <Footer className="container"/>
     </React.Fragment>

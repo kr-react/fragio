@@ -30,12 +30,14 @@ export default function HomeRoute({ match }) {
   return (
     <div className="d-flex flex-column h-100">
       <nav className="navbar navbar-expand-lg navbar-light bg-dark navbar-dark">
-        <Link className="navbar-brand" to="/">{process.env.APP_NAME}</Link>
+        <Link className="navbar-brand" to="/">
+          <b>{process.env.APP_NAME}</b>
+        </Link>
         <ul className="navbar-nav ml-auto text-light">
           <li className="nav-item dropdown">
             <div
               id="userctl-dropdown-toggle"
-              className="pointer"
+              className="pointer d-flex flex-row align-items-center"
               role="buttton"
               data-toggle="dropdown"
               aria-haspopup="true"

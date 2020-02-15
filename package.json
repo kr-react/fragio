@@ -28,18 +28,20 @@
     "style-loader": "^1.1.3",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.5",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
+    "i18next": "^19.1.0",
     "jquery": "^3.4.1",
     "moment": "^2.24.0",
+    "popper.js": "^1.16.1",
     "react": "^16.12.0",
-    "react-bootstrap": "^1.0.0-beta.16",
     "react-dnd": "^10.0.2",
     "react-dnd-html5-backend": "^10.0.2",
     "react-dom": "^16.12.0",
+    "react-i18next": "^11.3.1",
     "react-redux": "^7.1.3",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",

@@ -1,12 +1,12 @@
+@import "node_modules/bootstrap/scss/bootstrap";
+
 * {
   scrollbar-color: #CCCCCC #ECECEC;
   scrollbar-width: auto;
 }
 
 html, body, #root {
-  width: 100vw;
   height: 100vh;
-  max-width: 100vw;
   max-height: 100vh;
 }
 
@@ -15,16 +15,15 @@ body {
 }
 
 .app-activity {
-  & > .card-header,
-  & > .card-footer {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-
   & > .card-body {
-    padding: 5px 10px;
-    font-size: 0.8rem;
+    font-size: .9em;
   }
 }
 
 .pointer { cursor: pointer; }
+
+// Bootstrap overwrite
+
+.dropdown-toggle::after {
+  vertical-align: .175em;
+}

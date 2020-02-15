@@ -2,11 +2,10 @@ import * as React from "react";
 import { render } from "react-dom";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Provider } from "react-redux";
-import { createStore,Store } from "redux";
+import { createStore, Store } from "redux";
 import { ApplicationState, ReduxAction } from "./common";
 
-require("bootstrap");
-import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap";
 import "./index.scss";
 
 // Routes
