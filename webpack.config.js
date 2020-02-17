@@ -5,9 +5,6 @@ require("dotenv").config();
 
 module.exports = {
   mode: "none",
-  optimization: {
-    usedExports: true
-  },
   devtool: "source-map",
   watch: false,
   watchOptions: {
@@ -16,6 +13,9 @@ module.exports = {
   },
   output: {
     pathinfo: false
+  },
+  optimization: {
+    usedExports: true
   },
   resolve: {
     extensions: [".js", ".ts", ".tsx"],
@@ -56,6 +56,7 @@ module.exports = {
   plugins: [
     new Webpack.DefinePlugin({
       'process.env': {
+        MODE: process.env.NODE_ENV,
         PORT: JSON.stringify(process.env.PORT),
         API_URL: JSON.stringify(process.env.API_URL),
         APP_NAME: JSON.stringify(process.env.APP_NAME)

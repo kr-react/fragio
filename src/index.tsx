@@ -1,4 +1,8 @@
 import * as React from "react";
+import i18n from "i18next";
+import Backend from 'i18next-xhr-backend';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import { initReactI18next } from 'react-i18next';
 import { render } from "react-dom";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Provider } from "react-redux";
@@ -41,7 +45,7 @@ function appReducer(state: ApplicationState = new ApplicationState, action: Redu
 
 function update(store: Store<ApplicationState, ReduxAction>) {
   render(
-    <React.Fragment>
+    <React.Suspense fallback="Loading">
       <Provider store={store}>
         <BrowserRouter>
           <Switch>
@@ -55,10 +59,19 @@ function update(store: Store<ApplicationState, ReduxAction>) {
           </Switch>
         </BrowserRouter>
       </Provider>
-    </React.Fragment>,
+    </React.Suspense>,
     document.querySelector("#root")
   );
 }
+
+i18n
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    fallbackLng: "eng",
+    load: "languageOnly"
+  });
 
 const store = createStore(appReducer);
 store.subscribe(() => update(store));

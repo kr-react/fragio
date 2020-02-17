@@ -3,6 +3,7 @@ import * as moment from "moment";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { ActivityComponent, Footer } from "~/src/components";
+import { useTranslation } from 'react-i18next';
 import {
   FragioAPI,
   ApplicationState,
@@ -14,6 +15,7 @@ import {
 } from "~/src/common";
 
 export default function TeamPage({ match }) {
+  const { t, i18n } = useTranslation();
   const { user, token } = useSelector<ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const [localState, setLocalState] = React.useState<{
