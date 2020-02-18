@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from 'react-i18next';
 import { ApplicationState, QueryString, FragioAPI } from "~/src/common";
 
 function getTokenFromStorage() {
@@ -26,6 +27,7 @@ export default function LoginRoute({ match }) {
   const qString = new QueryString(location.href);
   const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [state, setState] = React.useState(0);
 
   React.useEffect(() => {
@@ -67,7 +69,11 @@ export default function LoginRoute({ match }) {
     return (
       <form onSubmit={onSubmitHandler}>
         <div className="form-group">
-          <label for="username">Username</label>
+          <label
+            className=""
+            for="username">
+            {t("username")}
+          </label>
           <input
             id="username"
             name="username"
@@ -78,7 +84,11 @@ export default function LoginRoute({ match }) {
             type="text"/>
         </div>
         <div className="form-group">
-          <label for="password">Password</label>
+          <label
+            className=""
+            for="password">
+            {t("password")}
+          </label>
           <input
             id="password"
             name="password"
@@ -95,15 +105,14 @@ export default function LoginRoute({ match }) {
             type="checkbox"
             value="remember"/>
           <label
-            className="form-check-label"
             for="remember">
-            Remember-me
+            {t("action.rememberMe")}
           </label>
         </div>
         <button
           className="btn btn-primary"
           type="submit">
-          Login
+          {t("action.login")}
         </button>
       </form>
     );
@@ -129,7 +138,9 @@ export default function LoginRoute({ match }) {
     return (
       <form onSubmit={onSubmitHandler}>
         <div className="form-group">
-          <label for="name">Name</label>
+          <label for="name">
+            {t("name")}
+          </label>
           <input
             id="name"
             name="name"
@@ -141,7 +152,9 @@ export default function LoginRoute({ match }) {
             type="text"/>
         </div>
         <div className="form-group">
-          <label for="username">Username</label>
+          <label for="username">
+            {t("username")}
+          </label>
           <input
             id="username"
             name="username"
@@ -152,7 +165,9 @@ export default function LoginRoute({ match }) {
             type="text"/>
         </div>
         <div className="form-group">
-          <label for="email">Email</label>
+          <label for="email">
+            {t("email")}
+          </label>
           <input
             id="email"
             name="email"
@@ -164,7 +179,9 @@ export default function LoginRoute({ match }) {
             type="email"/>
         </div>
         <div className="form-group">
-          <label for="password">Password</label>
+          <label for="password">
+            {t("password")}
+          </label>
           <input
             id="password"
             name="password"
@@ -176,7 +193,7 @@ export default function LoginRoute({ match }) {
         <button
           className="btn btn-primary"
           type="submit">
-          Create Account
+          {t("action.signIn")}
         </button>
       </form>
     );
@@ -198,7 +215,7 @@ export default function LoginRoute({ match }) {
               <div className="card-body">
                 <h5 className="card-title text-center">{process.env.APP_NAME}</h5>
                 <ul className="nav nav-tabs mb-3">
-                  {["Login", "Create Account"].map((tab, i) =>
+                  {[t("action.login"), t("action.signIn")].map((tab, i) =>
                     <li
                       className={`nav-item pointer`}
                       onClick={() => setState(i)}>

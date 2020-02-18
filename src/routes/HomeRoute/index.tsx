@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, Redirect, Switch, Route } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import {
   ApplicationState,
   User,
@@ -14,6 +15,7 @@ import NewTeamPage from "./NewTeamPage.tsx";
 
 export default function HomeRoute({ match }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const [state, setState] = React.useState({
     isMenuOpen: false,
@@ -56,13 +58,13 @@ export default function HomeRoute({ match }) {
               <Link
                 className="dropdown-item"
                 to={`/user/${user.username}`}>
-                Perfil
+                {t("perfil")}
               </Link>
               <div class="dropdown-divider"></div>
               <span
                 className="dropdown-item pointer"
                 onClick={() => dispatch({ type: "LOGOUT" })}>
-                Logout
+                {t("action.logout")}
               </span>
             </div>
           </li>

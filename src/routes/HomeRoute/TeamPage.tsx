@@ -15,7 +15,7 @@ import {
 } from "~/src/common";
 
 export default function TeamPage({ match }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user, token } = useSelector<ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const [localState, setLocalState] = React.useState<{
@@ -93,15 +93,15 @@ export default function TeamPage({ match }) {
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{`${activities.length} activities`}</b>
+            <b className="text-nowrap">{t("activityCount", {count: activities.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
-                <span className="input-group-text">Search</span>
+                <span className="input-group-text">{t("action.search")}</span>
               </div>
               <input
                 className="form-control"
                 type="text"
-                placeholder="Search all activities"
+                placeholder={t("action.searchActivities")}
                 aria-label="Search"
                 onChange={e => setSearchText(e.currentTarget.value)}/>
             </div>
@@ -131,15 +131,15 @@ export default function TeamPage({ match }) {
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{`${boards.length} boards`}</b>
+            <b className="text-nowrap">{t("boardCount", {count: boards.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
-                <span className="input-group-text">Search</span>
+                <span className="input-group-text">{t("action.search")}</span>
               </div>
               <input
                 className="form-control"
                 type="text"
-                placeholder="Search all boards"
+                placeholder={t("action.searchBoards")}
                 aria-label="Search"
                 onChange={e => setSearchText(e.currentTarget.value)}/>
             </div>
@@ -154,7 +154,7 @@ export default function TeamPage({ match }) {
                   <button
                     className="btn btn-outline-danger btn-sm"
                     onClick={() => removeBoard(board.id)}>
-                    Remove
+                    {t("action.remove")}
                   </button>
                 }
               </li>
@@ -175,15 +175,15 @@ export default function TeamPage({ match }) {
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{`${members.length} members`}</b>
+            <b className="text-nowrap">{t("memberCount", {count: members.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
-                <span className="input-group-text">Search</span>
+                <span className="input-group-text">{t("action.search")}</span>
               </div>
               <input
                 className="form-control"
                 type="text"
-                placeholder="Search all members"
+                placeholder={t("action.searchMembers")}
                 aria-label="Search"
                 onChange={e => setSearchText(e.currentTarget.value)}/>
             </div>
@@ -204,7 +204,7 @@ export default function TeamPage({ match }) {
                   </Link>
                   {isOwner(member.user) &&
                     <span className="ml-2 badge badge-secondary">
-                      Owner
+                      {t("owner")}
                     </span>
                   }
                 </span>
@@ -212,7 +212,7 @@ export default function TeamPage({ match }) {
                   <button
                     className="btn btn-outline-danger btn-sm"
                     onClick={() => removeMember(member.user.username)}>
-                    Remove
+                    {t("action.remove")}
                   </button>
                 }
               </li>
@@ -241,13 +241,13 @@ export default function TeamPage({ match }) {
 
     return (
       <React.Fragment>
-        <h4>Settings</h4>
+        <h4>{t("settings")}</h4>
         <hr/>
         <form onSubmit={onSubmitHandler}>
           <div className="form-group">
             <label
               for="rename-input">
-              Team name
+              {t("desc.teamName")}
             </label>
             <input
               id="rename-input"
@@ -259,7 +259,7 @@ export default function TeamPage({ match }) {
           <div className="form-group">
             <label
               for="image-url-input">
-              Image url
+              {t("desc.imageUrl")}
             </label>
             <input
               id="image-url-input"
@@ -271,7 +271,7 @@ export default function TeamPage({ match }) {
           <button
             type="submit"
             className="btn btn-primary btn-sm">
-            Save
+            {t("action.save")}
           </button>
         </form>
       </React.Fragment>

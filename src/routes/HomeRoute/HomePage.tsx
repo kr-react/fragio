@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, Redirect, useHistory } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Sticky, ActivityComponent } from "~/src/components";
 import {
   ApplicationState,
@@ -15,6 +16,7 @@ export default function HomePage({ match }) {
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [localState, setLocalState] = React.useState<{
     boards: Board[],
     teams: Team[],
@@ -102,12 +104,12 @@ export default function HomePage({ match }) {
           <Sticky>
             <div className="col-sm col-md-4 col-lg-3 p-3 overflow-auto h-100">
               <div className="d-flex flex-row align-items-center justify-content-between">
-                <span>Boards</span>
+                <span>{t("board_plural")}</span>
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm"
                   onClick={() => history.push("/newboard")}>
-                  New
+                  {t("action.new")}
                 </button>
               </div>
               <div className="input-group input-group-sm mt-2">
@@ -116,7 +118,7 @@ export default function HomePage({ match }) {
                   className="form-control"
                   value={searchState.board}
                   onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
-                  placeholder="Find a board..."
+                  placeholder={t("action.findBoard")}
                   aria-label="Board"/>
               </div>
               <div className="d-flex flex-column mt-2">
@@ -130,19 +132,19 @@ export default function HomePage({ match }) {
               </div>
               <hr className="my-3"/>
               <div className="d-flex flex-row align-items-center justify-content-between">
-                <span>Teams</span>
+                <span>{t("team_plural")}</span>
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm"
                   onClick={() => history.push("/newteam")}>
-                  New
+                  {t("action.new")}
                 </button>
               </div>
               <div className="input-group input-group-sm mt-2">
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Find a team..."
+                  placeholder={t("action.findTeam")}
                   value={searchState.team}
                   onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
                   aria-label="Team"/>
@@ -160,11 +162,11 @@ export default function HomePage({ match }) {
           </Sticky>
           <main className="col flex-column bg-white pt-3 px-3 border-left border-right d-none d-sm-none d-md-flex">
             <div className="mb-2 d-flex flex-row align-items-center justify-content-between">
-              <span>Activity</span>
+              <span>{t("activity")}</span>
               <button
                 className="btn btn-outline-primary btn-sm float-right"
                 onClick={() => refreshActivities()}>
-                Refresh
+                {t("action.refresh")}
               </button>
             </div>
             {localState.activities.map(activity =>
@@ -175,9 +177,7 @@ export default function HomePage({ match }) {
           </main>
           <Sticky>
             <div className="col-3 pt-3 px-3 d-none d-sm-none d-md-none d-lg-block overflow-auto h-100">
-              <div>
-                <span>Recents</span>
-              </div>
+              <div>{t("recent")}</div>
               <div className="d-flex flex-column">
                 {localState.history.map(entry =>
                   <Link

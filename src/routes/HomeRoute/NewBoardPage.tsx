@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-
+import { useTranslation } from 'react-i18next';
 import {
   ApplicationState,
   User,
@@ -14,6 +14,7 @@ export default function NewBoardPage({ match }) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
+  const { t } = useTranslation();
   const [localState, setLocalState] = React.useState<{
     teams: Team[],
   }>(undefined);
@@ -27,7 +28,7 @@ export default function NewBoardPage({ match }) {
           teams,
         });
 
-        document.title = `New board - ${process.env.APP_NAME}`
+        document.title = t("pageTitle.newBoard", {name: process.env.APP_NAME});
       } else {
         setLocalState(null);
       }
@@ -62,9 +63,9 @@ export default function NewBoardPage({ match }) {
   return (
     <div className="container-fluid h-100 bg-light">
       <div className="container h-100 py-4 bg-white border-left border-right">
-        <h5>Create a new board</h5>
+        <h5>{t("action.createBoard")}</h5>
         <small class="text-muted">
-          {"Create and use a board to manage work at a personal or organizational level."}
+          {t("desc.createBoard")}
         </small>
         <hr className="my-3" />
         <form
@@ -75,7 +76,7 @@ export default function NewBoardPage({ match }) {
                 <label
                   className="input-group-text"
                   for="name">
-                  Name
+                  {t("name")}
                 </label>
               </div>
               <input
@@ -86,11 +87,6 @@ export default function NewBoardPage({ match }) {
                 type="text"
                 aria-describedby="name-help"/>
             </div>
-            <small
-              id="name-help"
-              class="form-text text-muted">
-              {"Great board names are short and memorable. Need Inspiration?"}
-            </small>
           </div>
           <div className="form-group">
             <div className="input-group">
@@ -98,7 +94,7 @@ export default function NewBoardPage({ match }) {
                 <label
                   className="input-group-text"
                   for="select">
-                  Team
+                  {t("team")}
                 </label>
               </div>
               <select
@@ -108,7 +104,7 @@ export default function NewBoardPage({ match }) {
                 <option
                   value=""
                   selected>
-                  None
+                  {t("none")}
                 </option>
                 {localState.teams.map(team =>
                   <option value={team.id}>{team.name}</option>
@@ -127,12 +123,12 @@ export default function NewBoardPage({ match }) {
               <label
                 className="form-check-label"
                 for="public-radio">
-                Public
+                {t("public")}
               </label>
               <small
                 id="public-radio-help"
                 class="form-text text-muted mt-0">
-                {"Anyone can see this board. Team members can change."}
+                {t("desc.publicBoard")}
               </small>
             </div>
             <div className="form-check">
@@ -147,12 +143,12 @@ export default function NewBoardPage({ match }) {
               <label
                 className="form-check-label"
                 for="private-radio">
-                Private
+                {t("private")}
               </label>
               <small
                 id="private-radio-help"
                 class="form-text text-muted mt-0">
-                {"Only team members can see and change this board."}
+                {t("desc.privateBoard")}
               </small>
             </div>
           </div>
@@ -160,7 +156,7 @@ export default function NewBoardPage({ match }) {
           <button
             className="btn btn-primary"
             type="submit">
-            Create
+            {t("action.create")}
           </button>
         </form>
       </div>

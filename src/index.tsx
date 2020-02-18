@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as moment from "moment";
 import i18n from "i18next";
 import Backend from 'i18next-xhr-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -64,6 +65,9 @@ function update(store: Store<ApplicationState, ReduxAction>) {
   );
 }
 
+const store = createStore(appReducer);
+store.subscribe(() => update(store));
+
 i18n
   .use(Backend)
   .use(LanguageDetector)
@@ -71,8 +75,13 @@ i18n
   .init({
     fallbackLng: "eng",
     load: "languageOnly"
+  }, () => {
+    moment.locale(i18n.language);
   });
 
-const store = createStore(appReducer);
-store.subscribe(() => update(store));
+i18n.on("languageChanged", lang => {
+  moment.locale(lang)
+  update(store);
+});
+
 update(store);
