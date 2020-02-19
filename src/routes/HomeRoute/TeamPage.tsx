@@ -288,11 +288,9 @@ export default function TeamPage({ match }) {
     <React.Fragment>
       <div className="bg-light border-bottom">
         <div className="container">
-          <div className="py-3">
-            <h6 className="m-0">
-              <b>{localState.team.name}</b>
-            </h6>
-          </div>
+          <h6 className="m-0 py-3">
+            <b>{localState.team.name}</b>
+          </h6>
           <ul className="nav nav-tabs border-bottom-0 text-nowrap">
             <li
               className="nav-item pointer"
