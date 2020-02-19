@@ -106,7 +106,7 @@ export default function NewBoardPage({ match }) {
                   selected>
                   {t("none")}
                 </option>
-                {localState.teams.map(team =>
+                {localState.teams.filter(team => team.owner.id == user.id).map(team =>
                   <option value={team.id}>{team.name}</option>
                 )}
               </select>

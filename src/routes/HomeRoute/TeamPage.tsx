@@ -293,19 +293,19 @@ export default function TeamPage({ match }) {
               <b>{localState.team.name}</b>
             </h6>
           </div>
-          <ul className="nav nav-tabs border-bottom-0 text-nowrap flex-nowrap">
+          <ul className="nav nav-tabs border-bottom-0 text-nowrap">
             <li
               className="nav-item pointer"
               onClick={() => setTab(0)}>
               <span className={`nav-link${localState.selectedTab === 0 ? " active" : ""}`}>
-                Activities
+                {t("activity_plural")}
               </span>
             </li>
             <li
               className="nav-item pointer"
               onClick={() => setTab(1)}>
               <span className={`nav-link${localState.selectedTab === 1 ? " active" : ""}`}>
-                <span>Boards</span>
+                <span>{t("board_plural")}</span>
                 <span className="ml-2 badge badge-secondary">
                   {localState.boards.length}
                 </span>
@@ -315,7 +315,7 @@ export default function TeamPage({ match }) {
               className="nav-item pointer"
               onClick={() => setTab(2)}>
               <span className={`nav-link${localState.selectedTab === 2 ? " active" : ""}`}>
-                <span>Members</span>
+                <span>{t("member_plural")}</span>
                 <span className="ml-2 badge badge-secondary">
                   {localState.members.length}
                 </span>
@@ -326,7 +326,7 @@ export default function TeamPage({ match }) {
                 className="nav-item pointer"
                 onClick={() => setTab(3)}>
                 <span className={`nav-link${localState.selectedTab === 3 ? " active" : ""}`}>
-                  <span>Settings</span>
+                  <span>{t("settings")}</span>
                 </span>
               </li>
             }
