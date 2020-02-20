@@ -95,7 +95,6 @@ export interface Board {
   name: string;
   isPrivate: boolean;
   createdAt: string;
-  backgroundImage: string;
   labels: Label[];
 }
 

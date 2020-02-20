@@ -1,15 +1,16 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { ActivityComponent } from "~/src/components";
 import { useTranslation } from 'react-i18next';
+import { useDrag, useDrop, DndProvider } from "react-dnd";
+import Backend from "react-dnd-html5-backend";
+import { ActivityComponent } from "~/src/components";
 import {
   FragioAPI,
   ApplicationState,
-  Team,
-  Member,
   Board,
-  User,
-  Activity
+  List,
+  Card,
+  Activity,
 } from "~/src/common";
 
 interface ListComponentProps {
@@ -19,6 +20,7 @@ interface ListComponentProps {
 interface ListComponentProps {
   list: List;
   cards: Card[];
+  cardChanged?: (card: Card, changes: any) => void;
 }
 
 interface BoardComponentProps {
@@ -27,80 +29,168 @@ interface BoardComponentProps {
   board: Board;
   lists: List[];
   cards: Card[];
+  listChanged?: (before: any, after: List) => void;
+  cardChanged?: (card: Card, changes: any) => void;
 }
 
-function BoardComponent(props: BoardComponentProps) {
-  const { board, lists, cards } = props;
+function getPositionFromPoint(x: number, y: number, elem: HTMLElement) {
+  let pos = 0;
+  let dist = Number.MAX_VALUE;
+
+  for (let i = 0; i < elem.children.length; i++) {
+    const child = elem.children[i];
+    const bounding = child.getBoundingClientRect();
+    const x1 = bounding.x;
+    const y1 = bounding.y;
+    const res = Math.floor(Math.sqrt(x - x1) + Math.sqrt(y - y1));
+    if (res < dist) {
+      pos = i;
+      dist = res;
+    }
+  }
+
+  return pos;
+}
+
+const CardComponent = React.memo((props: CardComponentProps) => {
+  const { card } = props;
+  const [{ display }, dragRef] = useDrag({
+    item: { type: "card", card },
+    collect: monitor => ({
+      display: monitor.isDragging() ? "none" : undefined,
+    }),
+  });
 
   function getUrlsFromString(str: string) {
       const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
-      return pattern.exec(str);
+      return pattern.exec(str) || [];
   }
 
-  function getLabelById(id: string) {
-    return board.labels.find(label => label.id == id);
+  function getImagesFromString(str: string) {
+      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)\.(jpg|png)/;
+      return pattern.exec(str) || [];
   }
 
-  function CardComponent(props: CardComponentProps) {
-    const { card } = props;
-    const images = getUrlsFromString(card.description);
-
-    return (
-      <div className="card shadow-sm mb-2 pointer">
-        {(images && images[0].match(/\.(png|jpg)$/)) &&
-          <img
-            className="card-img-top"
-            src={images[0]}
-            alt="Card image"/>
-        }
-        <div className="card-body p-2">
-          <div className="d-flex flex-row flex-wrap mb-2">
-            {card.labelIds.map(id => getLabelById(id)).filter(label => label).map(label =>
-              <span
-                className="badge badge-secondary mr-1 mt-1"
-                style={{
-                  backgroundColor: `#${label.color.toString(16)}`
-                }}>
-                {label.name}
-              </span>
-            )}
-          </div>
-          <span>{card.name}</span>
-        </div>
-      </div>
-    );
+  function getLabels() {
+    return card.list.board.labels
+      .filter(label => card.labelIds.includes(label.id));
   }
 
-  function ListComponent(props: ListComponentProps) {
-    const { list, cards } = props;
-
-    return (
-      <div className="card shadow-sm mr-3 mh-100" style={{
-        width: "300px",
-        minWidth: "300px",
-      }}>
-        <div className="card-header d-flex flex-row justify-content-between align-items-center">
-          <b>{list.name}</b>
-          <span className="badge badge-secondary">
-            {cards.length}
-          </span>
-        </div>
-        <div className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
-          {cards.map(card =>
-            <CardComponent card={card}/>
+  return (
+    <div
+      ref={dragRef}
+      className="card shadow-sm mb-2 pointer"
+      style={{display}}>
+      {getImagesFromString(card.description).length > 0 &&
+        <img
+          className="card-img-top"
+          src={getImagesFromString(card.description)[0]}
+          alt="Card image"/>
+      }
+      <div className="card-body p-2">
+        <div className="d-flex flex-row flex-wrap mb-2">
+          {getLabels().map(label =>
+            <span
+              className="badge badge-secondary mr-1 mt-1"
+              style={{
+                backgroundColor: `#${label.color.toString(16)}`
+              }}>
+              {label.name}
+            </span>
           )}
         </div>
+        <span>{card.name}</span>
       </div>
-    );
-  }
+    </div>
+  );
+});
+
+const ListComponent = React.memo((props: ListComponentProps) => {
+  const { list, cards } = props;
+  const [{ display }, dragRef] = useDrag({
+    item: { type: "list", list },
+    collect: monitor => ({
+      display: monitor.isDragging() ? "none" : undefined,
+    }),
+  });
+  const [dropProps, dropRef] = useDrop({
+    accept: ["card"],
+    options: {
+      arePropsEqual: (a, b) => a.card.id == b.card.id,
+    },
+    drop: (item, monitor) => {
+      const { x, y } = monitor.getClientOffset();
+      const elem = document.querySelector(`#list-${list.id} > .card-body`);
+
+      if (props.cardChanged) {
+        props.cardChanged({...item.card}, {
+          position: getPositionFromPoint(x, y, elem),
+          listId: list.id
+        });
+      }
+    }
+  });
+
+  return (
+    <div
+      ref={dragRef}
+      id={`list-${list.id}`}
+      className="card shadow-sm mr-3 mh-100"
+      style={{
+      width: "300px",
+      minWidth: "300px",
+      display,
+    }}>
+      <div className="card-header d-flex flex-row justify-content-between align-items-center">
+        <b>{list.name}</b>
+        <span className="badge badge-secondary">
+          {cards.length}
+        </span>
+      </div>
+      <div
+        ref={dropRef}
+        className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
+        {cards.sort((a, b) => a.position - b.position).map(card =>
+          <CardComponent card={card}/>
+        )}
+      </div>
+    </div>
+  );
+});
+
+function BoardComponent(props: BoardComponentProps) {
+  const { board, lists, cards } = props;
+  const [dropProps, dropRef] = useDrop({
+    accept: ["list"],
+    options: {
+      arePropsEqual: (a, b) => a.list.id == b.list.id,
+    },
+    drop: (item, monitor) => {
+      const { x, y } = monitor.getClientOffset();
+      const elem = document.querySelector(`#board-${board.id}`);
+
+      if (props.listChanged) {
+        props.listChanged({
+          position: item.list.position
+        }, {
+          ...item.list,
+          position: getPositionFromPoint(x, y, elem)
+        });
+      }
+    }
+  });
 
   const elem = (
-    <div className="overflow-auto p-3 d-flex flex-row align-items-start">
-      {lists.map(list =>
+    <div
+      ref={dropRef}
+      id={`board-${board.id}`}
+      className="overflow-auto p-3 d-flex flex-row align-items-start">
+      {lists.sort((a, b) => a.position - b.position).map(list =>
         <ListComponent
           className="mr-3 mh-100"
           list={list}
-          cards={cards.filter(card => card.listId == list.id)}/>
+          cards={cards.filter(card => card.listId == list.id)}
+          cardChanged={props.cardChanged}/>
       )}
     </div>
   );
@@ -203,11 +293,18 @@ export default function BoardPage({ match }) {
                 {t("activity_plural")}
               </span>
             </li>
+            <li
+              className="nav-item pointer"
+              onClick={() => setTab(2)}>
+              <span className={`nav-link${localState.selectedTab === 2 ? " active" : ""}`}>
+                {t("label_plural")}
+              </span>
+            </li>
             {isOwner(user) &&
               <li
                 className="nav-item pointer"
-                onClick={() => setTab(2)}>
-                <span className={`nav-link${localState.selectedTab === 2 ? " active" : ""}`}>
+                onClick={() => setTab(3)}>
+                <span className={`nav-link${localState.selectedTab === 3 ? " active" : ""}`}>
                   <span>{t("settings")}</span>
                 </span>
               </li>
@@ -216,12 +313,85 @@ export default function BoardPage({ match }) {
         </div>
       </div>
       {localState.selectedTab == 0 &&
-        <BoardComponent
-          as={"main"}
-          className="flex-fill"
-          board={localState.board}
-          lists={localState.lists}
-          cards={localState.cards}/>
+        <DndProvider backend={Backend}>
+          <BoardComponent
+            as={"main"}
+            className="flex-fill"
+            board={localState.board}
+            lists={localState.lists}
+            cards={localState.cards}
+            listChanged={(old, updated) => {
+              const newLists = [...localState.lists];
+              const index = newLists.findIndex(l => l.id == updated.id);
+
+              if (old.position != null) {
+                for (const list of newLists) {
+                  if (list.position > old.position) {
+                    list.position--;
+                  }
+
+                  if (list.position >= updated.position) {
+                    list.position++;
+                  }
+                }
+
+                newLists[index].position = updated.position;
+              }
+
+              setLocalState({
+                ...localState,
+                lists: newLists
+              });
+
+              api.updateList(updated.boardId, updated.id, {
+                position: updated.position
+              }).catch(() => {
+                newLists[index].position = old.position;
+                setLocalState({
+                  ...localState,
+                  lists: newLists
+                });
+              });
+            }}
+            cardChanged={(card, changes) => {
+              const newCards = [...localState.cards];
+              const index = newCards.findIndex(c => c.id == card.id);
+
+              if (changes.position != null) {
+                for (const c of newCards) {
+                  if (c.position > card.position && c.listId == card.listId) {
+                    c.position--;
+                  }
+
+                  if (c.position >= changes.position && c.listId == changes.listId) {
+                    c.position++;
+                  }
+                }
+
+                newCards[index].position = changes.position;
+                newCards[index].listId = changes.listId;
+                newCards[index].list = localState.lists.find(list => list.id == changes.listId);
+              }
+
+              setLocalState({
+                ...localState,
+                cards: newCards
+              });
+
+              api.updateCard(card.list.boardId, card.listId, card.id, {
+                position: changes.position,
+                listId: changes.listId,
+              }).catch(() => {
+                newCards[index].position = card.position;
+                newCards[index].listId = card.listId;
+                newCards[index].list = card.list;
+                setLocalState({
+                  ...localState,
+                  cards: newCards
+                });
+              });
+            }}/>
+        </DndProvider>
       }
     </React.Fragment>
   );
