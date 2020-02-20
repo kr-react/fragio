@@ -29,8 +29,19 @@ interface BoardComponentProps {
   board: Board;
   lists: List[];
   cards: Card[];
-  listChanged?: (before: any, after: List) => void;
+  listChanged?: (list: List, changes: any) => void;
   cardChanged?: (card: Card, changes: any) => void;
+}
+
+const BoardContext = React.createContext(null);
+const ListContext = React.createContext(null);
+
+function useBoard() {
+  return React.useContext(BoardContext);
+}
+
+function useList() {
+  return React.useContext(ListContext);
 }
 
 function getPositionFromPoint(x: number, y: number, elem: HTMLElement) {
@@ -54,6 +65,7 @@ function getPositionFromPoint(x: number, y: number, elem: HTMLElement) {
 
 const CardComponent = React.memo((props: CardComponentProps) => {
   const { card } = props;
+  const board = useBoard();
   const [{ display }, dragRef] = useDrag({
     item: { type: "card", card },
     collect: monitor => ({
@@ -72,7 +84,7 @@ const CardComponent = React.memo((props: CardComponentProps) => {
   }
 
   function getLabels() {
-    return card.list.board.labels
+    return board.labels
       .filter(label => card.labelIds.includes(label.id));
   }
 
@@ -150,9 +162,11 @@ const ListComponent = React.memo((props: ListComponentProps) => {
       <div
         ref={dropRef}
         className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
-        {cards.sort((a, b) => a.position - b.position).map(card =>
-          <CardComponent card={card}/>
-        )}
+        <ListContext.Provider value={list}>
+          {cards.sort((a, b) => a.position - b.position).map(card =>
+            <CardComponent card={card}/>
+          )}
+        </ListContext.Provider>
       </div>
     </div>
   );
@@ -170,10 +184,7 @@ function BoardComponent(props: BoardComponentProps) {
       const elem = document.querySelector(`#board-${board.id}`);
 
       if (props.listChanged) {
-        props.listChanged({
-          position: item.list.position
-        }, {
-          ...item.list,
+        props.listChanged({...item.list}, {
           position: getPositionFromPoint(x, y, elem)
         });
       }
@@ -185,13 +196,15 @@ function BoardComponent(props: BoardComponentProps) {
       ref={dropRef}
       id={`board-${board.id}`}
       className="overflow-auto p-3 d-flex flex-row align-items-start">
-      {lists.sort((a, b) => a.position - b.position).map(list =>
-        <ListComponent
-          className="mr-3 mh-100"
-          list={list}
-          cards={cards.filter(card => card.listId == list.id)}
-          cardChanged={props.cardChanged}/>
-      )}
+      <BoardContext.Provider value={board}>
+        {lists.sort((a, b) => a.position - b.position).map(list =>
+          <ListComponent
+            className="mr-3 mh-100"
+            list={list}
+            cards={cards.filter(card => card.listId == list.id)}
+            cardChanged={props.cardChanged}/>
+        )}
+      </BoardContext.Provider>
     </div>
   );
 
@@ -320,22 +333,22 @@ export default function BoardPage({ match }) {
             board={localState.board}
             lists={localState.lists}
             cards={localState.cards}
-            listChanged={(old, updated) => {
+            listChanged={(list, changes) => {
               const newLists = [...localState.lists];
-              const index = newLists.findIndex(l => l.id == updated.id);
+              const index = newLists.findIndex(l => l.id == list.id);
 
-              if (old.position != null) {
-                for (const list of newLists) {
-                  if (list.position > old.position) {
-                    list.position--;
+              if (changes.position != null) {
+                for (const l of newLists) {
+                  if (l.position > list.position) {
+                    l.position--;
                   }
 
-                  if (list.position >= updated.position) {
-                    list.position++;
+                  if (l.position >= changes.position) {
+                    l.position++;
                   }
                 }
 
-                newLists[index].position = updated.position;
+                newLists[index].position = changes.position;
               }
 
               setLocalState({
@@ -343,10 +356,10 @@ export default function BoardPage({ match }) {
                 lists: newLists
               });
 
-              api.updateList(updated.boardId, updated.id, {
-                position: updated.position
+              api.updateList(list.boardId, list.id, {
+                position: changes.position
               }).catch(() => {
-                newLists[index].position = old.position;
+                newLists[index].position = list.position;
                 setLocalState({
                   ...localState,
                   lists: newLists
