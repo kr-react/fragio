@@ -19,6 +19,13 @@ interface FooterProps {
   className?: string;
 }
 
+export function useSearch<T>(arr: T[], map: (T) => string) {
+  const [state, setState] = React.useState(arr);
+  const func = (text: string) => setState(arr.filter(item => map(item).includes(text)));
+
+  return [func, state];
+}
+
 export function Sticky(props: StickyProps) {
   const ref = React.useRef<HTMLElement>();
 
@@ -69,7 +76,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Added board </span>
+            <span>Created board </span>
             <Link to={`/board/${board.id}`}>
               <b>{board.name}</b>
             </Link>
@@ -82,7 +89,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Added list </span>
+            <span>Created list </span>
             <b>{list.name}</b>
             <span> to </span>
             <Link to={`/board/${list.board.id}`}>
@@ -97,7 +104,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Added card </span>
+            <span>Created card </span>
             <b>{card.name}</b>
             <span> to </span>
             <b>{card.list.name}</b>
@@ -220,7 +227,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
           {getBody()}
         </div>
         <div className="card-footer text-muted p-2">
-          <span>{activity.team.name}</span>
+          <span>{activity.board.team.name}</span>
           <span className="float-right">
             {moment(activity.createdAt).fromNow()}
           </span>

@@ -3,7 +3,11 @@ import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
-import { ActivityComponent } from "~/src/components";
+import {
+  useSearch,
+  ActivityComponent,
+  Footer,
+} from "~/src/components";
 import {
   FragioAPI,
   ApplicationState,
@@ -44,12 +48,12 @@ function useList() {
   return React.useContext(ListContext);
 }
 
-function getPositionFromPoint(x: number, y: number, elem: HTMLElement) {
+function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
   let pos = 0;
   let dist = Number.MAX_VALUE;
 
-  for (let i = 0; i < elem.children.length; i++) {
-    const child = elem.children[i];
+  for (let i = 0; i < elems.length; i++) {
+    const child = elems[i];
     const bounding = child.getBoundingClientRect();
     const x1 = bounding.x;
     const y1 = bounding.y;
@@ -119,6 +123,7 @@ const CardComponent = React.memo((props: CardComponentProps) => {
 
 const ListComponent = React.memo((props: ListComponentProps) => {
   const { list, cards } = props;
+  const { t } = useTranslation();
   const [{ display }, dragRef] = useDrag({
     item: { type: "list", list },
     collect: monitor => ({
@@ -130,13 +135,18 @@ const ListComponent = React.memo((props: ListComponentProps) => {
     options: {
       arePropsEqual: (a, b) => a.card.id == b.card.id,
     },
+    hover: (item, monitor) => {
+      const { x, y } = monitor.getClientOffset();
+      const elem = document.querySelector(`#list-${list.id} > .card-body`);
+      const i = getPositionFromPoint(x, y, elem.children);
+    },
     drop: (item, monitor) => {
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#list-${list.id} > .card-body`);
 
       if (props.cardChanged) {
         props.cardChanged({...item.card}, {
-          position: getPositionFromPoint(x, y, elem),
+          position: getPositionFromPoint(x, y, elem.children),
           listId: list.id
         });
       }
@@ -166,6 +176,11 @@ const ListComponent = React.memo((props: ListComponentProps) => {
           {cards.sort((a, b) => a.position - b.position).map(card =>
             <CardComponent card={card}/>
           )}
+          {cards.length == 0 &&
+            <div className="text-muted mb-2 text-center">
+              {t("desc.emptyCard")}
+            </div>
+          }
         </ListContext.Provider>
       </div>
     </div>
@@ -185,7 +200,7 @@ function BoardComponent(props: BoardComponentProps) {
 
       if (props.listChanged) {
         props.listChanged({...item.list}, {
-          position: getPositionFromPoint(x, y, elem)
+          position: getPositionFromPoint(x, y, elem.children)
         });
       }
     }
@@ -232,6 +247,7 @@ export default function BoardPage({ match }) {
     lists: List[],
     cards: Card[],
     teams: Team[],
+    activities: Activity[],
     selectedTab: number,
   }>(undefined);
 
@@ -241,13 +257,15 @@ export default function BoardPage({ match }) {
       const lists = await api.getLists(match.params.id);
       const cards = await api.getCards(match.params.id);
       const teams = await api.getTeamsFromUser(user.username);
+      const activities = await api.getBoardActivities(match.params.id);
 
-      if (board && lists && cards) {
+      if (board && lists && cards && teams && activities) {
         setLocalState({
           board,
           lists,
           cards,
           teams,
+          activities,
           selectedTab: 0,
         });
 
@@ -278,6 +296,177 @@ export default function BoardPage({ match }) {
     });
   }
 
+  function BoardTab() {
+    return (
+      <DndProvider backend={Backend}>
+        <BoardComponent
+          as={"main"}
+          className="flex-fill"
+          board={localState.board}
+          lists={localState.lists}
+          cards={localState.cards}
+          listChanged={(list, changes) => {
+            const newLists = [...localState.lists];
+            const index = newLists.findIndex(l => l.id == list.id);
+
+            if (changes.position != null) {
+              for (const l of newLists) {
+                if (l.position > list.position) {
+                  l.position--;
+                }
+
+                if (l.position >= changes.position) {
+                  l.position++;
+                }
+              }
+
+              newLists[index].position = changes.position;
+            }
+
+            setLocalState({
+              ...localState,
+              lists: newLists
+            });
+
+            api.updateList(list.boardId, list.id, {
+              position: changes.position
+            }).catch(() => {
+              newLists[index].position = list.position;
+              setLocalState({
+                ...localState,
+                lists: newLists
+              });
+            });
+          }}
+          cardChanged={(card, changes) => {
+            const newCards = [...localState.cards];
+            const index = newCards.findIndex(c => c.id == card.id);
+
+            if (changes.position != null) {
+              for (const c of newCards) {
+                if (c.position > card.position && c.listId == card.listId) {
+                  c.position--;
+                }
+
+                if (c.position >= changes.position && c.listId == changes.listId) {
+                  c.position++;
+                }
+              }
+
+              newCards[index].position = changes.position;
+              newCards[index].listId = changes.listId;
+              newCards[index].list = localState.lists.find(list => list.id == changes.listId);
+            }
+
+            setLocalState({
+              ...localState,
+              cards: newCards
+            });
+
+            api.updateCard(card.list.boardId, card.listId, card.id, {
+              position: changes.position,
+              listId: changes.listId,
+            }).catch(() => {
+              newCards[index].position = card.position;
+              newCards[index].listId = card.listId;
+              newCards[index].list = card.list;
+              setLocalState({
+                ...localState,
+                cards: newCards
+              });
+            });
+          }}/>
+      </DndProvider>
+    );
+  }
+
+  function ActivitiesTab() {
+    const [search, activities] = useSearch(localState.activities, a => a.user.name.toLowerCase());
+
+    return (
+      <div className="card">
+        <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
+          <b className="text-nowrap">{t("activityCount", {count: activities.length})}</b>
+          <div className="input-group input-group-sm ml-4">
+            <div className="input-group-prepend">
+              <span className="input-group-text">{t("action.search")}</span>
+            </div>
+            <input
+              className="form-control"
+              type="text"
+              placeholder={t("action.searchActivities")}
+              aria-label="Search"
+              onChange={e => search(e.currentTarget.value.toLowerCase())}/>
+          </div>
+        </div>
+        <ul className="list-group list-group-flush">
+          {activities.map(activity =>
+            <ActivityComponent
+              as={"li"}
+              className="list-group-item"
+              activity={activity}
+              compact/>
+          )}
+        </ul>
+      </div>
+    );
+  }
+
+  function LabelsTab() {
+    const [search, labels] = useSearch(localState.board.labels, a => a.name.toLowerCase());
+
+    return (
+      <div className="card">
+        <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
+          <b className="text-nowrap">{t("labelCount", {count: labels.length})}</b>
+          <div className="input-group input-group-sm ml-4">
+            <div className="input-group-prepend">
+              <span className="input-group-text">{t("action.search")}</span>
+            </div>
+            <input
+              className="form-control"
+              type="text"
+              placeholder={t("action.searchLabels")}
+              aria-label="Search"
+              onChange={e => search(e.currentTarget.value.toLowerCase())}/>
+          </div>
+        </div>
+        <ul className="list-group list-group-flush">
+          {labels.map(label =>
+            <div className="list-group-item d-flex align-items-center">
+              <div
+                className="rounded-circle mr-3"
+                style={{
+                  width: "25px",
+                  height: "25px",
+                  backgroundColor: `#${label.color.toString(16)}`,
+                }}></div>
+              <span className="mr-auto">
+                {label.name}
+              </span>
+              <button
+                className="btn btn-outline-danger btn-sm"
+                onClick={e => {
+                  api.deleteLabel(localState.board.id, label.id)
+                    .then(() => {
+                      setLocalState({
+                        ...localState,
+                        board: {
+                          ...localState.board,
+                          labels: labels.filter(l => l.id != label.id)
+                        },
+                      });
+                    });
+                }}>
+                {t("action.remove")}
+              </button>
+            </div>
+          )}
+        </ul>
+      </div>
+    );
+  }
+
   if (localState === null) {
     return <div>Not Found</div>;
   } else if (localState === undefined) {
@@ -303,14 +492,17 @@ export default function BoardPage({ match }) {
               className="nav-item pointer"
               onClick={() => setTab(1)}>
               <span className={`nav-link${localState.selectedTab === 1 ? " active" : ""}`}>
-                {t("activity_plural")}
+                <span>{t("activity_plural")}</span>
               </span>
             </li>
             <li
               className="nav-item pointer"
               onClick={() => setTab(2)}>
               <span className={`nav-link${localState.selectedTab === 2 ? " active" : ""}`}>
-                {t("label_plural")}
+                <span>{t("label_plural")}</span>
+                <span className="ml-2 badge badge-secondary">
+                  {localState.board.labels.length}
+                </span>
               </span>
             </li>
             {isOwner(user) &&
@@ -325,87 +517,18 @@ export default function BoardPage({ match }) {
           </ul>
         </div>
       </div>
-      {localState.selectedTab == 0 &&
-        <DndProvider backend={Backend}>
-          <BoardComponent
-            as={"main"}
-            className="flex-fill"
-            board={localState.board}
-            lists={localState.lists}
-            cards={localState.cards}
-            listChanged={(list, changes) => {
-              const newLists = [...localState.lists];
-              const index = newLists.findIndex(l => l.id == list.id);
-
-              if (changes.position != null) {
-                for (const l of newLists) {
-                  if (l.position > list.position) {
-                    l.position--;
-                  }
-
-                  if (l.position >= changes.position) {
-                    l.position++;
-                  }
-                }
-
-                newLists[index].position = changes.position;
-              }
-
-              setLocalState({
-                ...localState,
-                lists: newLists
-              });
-
-              api.updateList(list.boardId, list.id, {
-                position: changes.position
-              }).catch(() => {
-                newLists[index].position = list.position;
-                setLocalState({
-                  ...localState,
-                  lists: newLists
-                });
-              });
-            }}
-            cardChanged={(card, changes) => {
-              const newCards = [...localState.cards];
-              const index = newCards.findIndex(c => c.id == card.id);
-
-              if (changes.position != null) {
-                for (const c of newCards) {
-                  if (c.position > card.position && c.listId == card.listId) {
-                    c.position--;
-                  }
-
-                  if (c.position >= changes.position && c.listId == changes.listId) {
-                    c.position++;
-                  }
-                }
-
-                newCards[index].position = changes.position;
-                newCards[index].listId = changes.listId;
-                newCards[index].list = localState.lists.find(list => list.id == changes.listId);
-              }
-
-              setLocalState({
-                ...localState,
-                cards: newCards
-              });
-
-              api.updateCard(card.list.boardId, card.listId, card.id, {
-                position: changes.position,
-                listId: changes.listId,
-              }).catch(() => {
-                newCards[index].position = card.position;
-                newCards[index].listId = card.listId;
-                newCards[index].list = card.list;
-                setLocalState({
-                  ...localState,
-                  cards: newCards
-                });
-              });
-            }}/>
-        </DndProvider>
+      {localState.selectedTab == 0 && <BoardTab/>}
+      {localState.selectedTab == 1 &&
+        <main className="container pt-4">
+          <ActivitiesTab/>
+        </main>
       }
+      {localState.selectedTab == 2 &&
+        <main className="container pt-4">
+          <LabelsTab/>
+        </main>
+      }
+      {localState.selectedTab > 0 && <Footer className="container"/>}
     </React.Fragment>
   );
 }

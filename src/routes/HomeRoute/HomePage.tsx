@@ -8,6 +8,7 @@ import {
   Board,
   Team,
   HistoryEntry,
+  Activity,
   FragioAPI,
 } from "~/src/common";
 

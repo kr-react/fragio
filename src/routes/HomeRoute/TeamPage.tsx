@@ -117,7 +117,6 @@ export default function TeamPage({ match }) {
           </ul>
         </div>
       </React.Fragment>
-
     );
   }
 

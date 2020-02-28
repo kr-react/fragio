@@ -73,8 +73,7 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "eng",
-    load: "languageOnly"
+    fallbackLng: "en-US",
   }, () => {
     moment.locale(i18n.language);
   });

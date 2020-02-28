@@ -131,17 +131,15 @@ export interface HistoryEntry {
   createdAt: string;
 }
 
-export interface Acvitity {
+export interface Activity {
   id: string;
   userId: string;
-  teamId?: string;
   boardId?: string;
   listId?: string;
   cardId?: string;
   activityType: number;
   createdAt: string;
   user: User;
-  team: Team;
   board?: Board;
   list?: List;
   card?: Card;
@@ -227,8 +225,8 @@ export class FragioAPI {
     });
   }
 
-  async getActivitiesFromUser(username: string, after: string = null) : Promise<Activity[]> {
-    return this.request(`api/v1/user/${username}/activity?after=${after}`, {
+  async getActivitiesFromUser(username: string) : Promise<Activity[]> {
+    return this.request(`api/v1/user/${username}/activities`, {
       useToken: true
     });
   }
@@ -289,7 +287,7 @@ export class FragioAPI {
   }
 
   async getTeamActivities(teamId: string) : Promise<Activity[]> {
-    return this.request(`api/v1/team/${teamId}/activity`, {
+    return this.request(`api/v1/team/${teamId}/activities`, {
       method: "GET",
       useToken: true,
     });
@@ -339,6 +337,13 @@ export class FragioAPI {
     });
   }
 
+  async getBoardActivities(boardId: string) : Promise<Activity[]> {
+    return this.request(`api/v1/board/${boardId}/activities`, {
+      method: "GET",
+      useToken: true,
+    });
+  }
+
   async createLabel(boardId: string, data: any) : Promise<Label> {
     return this.request(`api/v1/board/${boardId}/labels`, {
       method: "POST",
@@ -355,7 +360,7 @@ export class FragioAPI {
     });
   }
 
-  async deleteLabel(boardId: string, labelId: string, data: any) : Promise<void> {
+  async deleteLabel(boardId: string, labelId: string) : Promise<void> {
     return this.request(`api/v1/board/${boardId}/labels/${labelId}`, {
       method: "DELETE",
       useToken: true,

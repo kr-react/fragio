@@ -29,6 +29,8 @@
   "label_plural": "Labels",
   "activityCount": "{{count}} activity",
   "activityCount_plural": "{{count}} activities",
+  "labelCount": "{{count}} label",
+  "labelCount_plural": "{{count}} labels",
   "boardCount": "{{count}} board",
   "boardCount_plural": "{{count}} boards",
   "memberCount": "{{count}} member",
@@ -45,9 +47,10 @@
     "refresh": "Refresh",
     "findBoard": "Find a board...",
     "findTeam": "Find a team...",
-    "searchActivities": "Search all activities",
-    "searchBoards": "Search all boards",
-    "searchMembers": "Search all members",
+    "searchActivities": "Search all activities...",
+    "searchBoards": "Search all boards...",
+    "searchMembers": "Search all members...",
+    "searchLabels": "Search all labels...",
     "createTeam": "Create a new Team",
     "createBoard": "Create a new Board",
     "save": "Save"
@@ -58,7 +61,8 @@
     "publicBoard": "Anyone can see this board. Team members can change.",
     "privateBoard": "Only team members can see and change this board.",
     "teamName": "Team name",
-    "imageUrl": "Image url"
+    "imageUrl": "Image url",
+    "emptyCard": "Create or drop a card here"
   },
   "pageTitle": {
     "newBoard": "New board - {{name}}",
