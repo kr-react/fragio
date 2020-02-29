@@ -1,7 +1,11 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import * as moment from "moment";
+import * as $ from "jquery";
 import { Link } from "react-router-dom";
 import { Activity } from "~/src/common";
+
+const ModalContext = React.createContext(null);
 
 interface StickyProps {
   children: JSX.Element;
@@ -19,14 +23,51 @@ interface FooterProps {
   className?: string;
 }
 
-export function useSearch<T>(arr: T[], map: (T) => string) {
+function useSearch<T>(arr: T[], map: (T) => string) {
   const [state, setState] = React.useState(arr);
   const func = (text: string) => setState(arr.filter(item => map(item).includes(text)));
 
   return [func, state];
 }
 
-export function Sticky(props: StickyProps) {
+function useModalContext() {
+  return React.useContext(ModalContext);
+}
+
+function useModal() {
+  const elem = document.createElement("div");
+  const dialog = document.createElement("div");
+
+  elem.setAttribute("class", "modal fade");
+  elem.setAttribute("tabindex", "-1");
+  elem.setAttribute("role", "dialog");
+
+  dialog.setAttribute("class", "modal-dialog");
+  dialog.setAttribute("role", "document");
+
+  document.body.appendChild(elem);
+  elem.appendChild(dialog);
+
+  function show(render?: JSX.Element | false) {
+    if (!render) {
+      $(elem).modal("hide");
+      return;
+    }
+
+    ReactDOM.render(render, dialog);
+    $(elem).modal();
+  }
+
+  React.useEffect(() => {
+    return () => {
+      document.body.removeChild(elem);
+    };
+  }, []);
+
+  return show;
+}
+
+function Sticky(props: StickyProps) {
   const ref = React.useRef<HTMLElement>();
 
   async function onScrollHandler(container: HTMLElement, target: HTMLElement) {
@@ -66,7 +107,7 @@ export function Sticky(props: StickyProps) {
   };
 }
 
-export function ActivityComponent(props: ActivityComponentProps) {
+function ActivityComponent(props: ActivityComponentProps) {
   const { activity } = props;
 
   function getBody() {
@@ -245,7 +286,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
   return element;
 }
 
-export function Footer(props: FooterProps) {
+function Footer(props: FooterProps) {
   const date = new Date();
 
   return (
@@ -272,3 +313,13 @@ export function Footer(props: FooterProps) {
     </footer>
   );
 }
+
+export {
+  useSearch,
+  useModal,
+  useModalContext,
+  ModalContext,
+  Sticky,
+  ActivityComponent,
+  Footer,
+};

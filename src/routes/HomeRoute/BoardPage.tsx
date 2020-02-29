@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
 import {
+  useModal,
+  useModalContext,
   useSearch,
+  ModalContext,
   ActivityComponent,
   Footer,
 } from "~/src/components";
@@ -17,8 +20,9 @@ import {
   Activity,
 } from "~/src/common";
 
-interface ListComponentProps {
+interface CardComponentProps {
   card: Card;
+  onClick?: (e: HTMLMouseEvent<HTMLDivElement>) => void;
 }
 
 interface ListComponentProps {
@@ -96,6 +100,7 @@ const CardComponent = React.memo((props: CardComponentProps) => {
     <div
       ref={dragRef}
       className="card shadow-sm mb-2 pointer"
+      onClick={props.onClick}
       style={{display}}>
       {getImagesFromString(card.description).length > 0 &&
         <img
@@ -123,6 +128,8 @@ const CardComponent = React.memo((props: CardComponentProps) => {
 
 const ListComponent = React.memo((props: ListComponentProps) => {
   const { list, cards } = props;
+  const modal = useModalContext();
+  const board = useBoard();
   const { t } = useTranslation();
   const [{ display }, dragRef] = useDrag({
     item: { type: "list", list },
@@ -174,11 +181,45 @@ const ListComponent = React.memo((props: ListComponentProps) => {
         className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
         <ListContext.Provider value={list}>
           {cards.sort((a, b) => a.position - b.position).map(card =>
-            <CardComponent card={card}/>
+            <CardComponent
+              card={card}
+              onClick={() => {
+                const labels = board.labels
+                  .filter(label => card.labelIds.includes(label.id));
+
+                modal(
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h6 className="modal-title">{card.name}</h6>
+                      <button
+                        className="close"
+                        aria-label="Close"
+                        onClick={() => modal(false)}>
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div className="modal-body">
+                      <div className="d-flex flex-row flex-wrap">
+                        {labels.map(label =>
+                          <button
+                            className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
+                            style={{
+                              backgroundColor: `#${label.color.toString(16)}`,
+                              borderColor: `#${label.color.toString(16)}`,
+                            }}>
+                            <span>{label.name}</span>
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-wrap">{card.description}</p>
+                    </div>
+                  </div>
+                );
+              }}/>
           )}
           {cards.length == 0 &&
             <div className="text-muted mb-2 text-center">
-              {t("desc.emptyCard")}
+              {t("desc.emptyList")}
             </div>
           }
         </ListContext.Provider>
@@ -189,6 +230,7 @@ const ListComponent = React.memo((props: ListComponentProps) => {
 
 function BoardComponent(props: BoardComponentProps) {
   const { board, lists, cards } = props;
+  const modal = useModal();
   const [dropProps, dropRef] = useDrop({
     accept: ["list"],
     options: {
@@ -212,13 +254,15 @@ function BoardComponent(props: BoardComponentProps) {
       id={`board-${board.id}`}
       className="overflow-auto p-3 d-flex flex-row align-items-start">
       <BoardContext.Provider value={board}>
-        {lists.sort((a, b) => a.position - b.position).map(list =>
-          <ListComponent
-            className="mr-3 mh-100"
-            list={list}
-            cards={cards.filter(card => card.listId == list.id)}
-            cardChanged={props.cardChanged}/>
-        )}
+        <ModalContext.Provider value={modal}>
+          {lists.sort((a, b) => a.position - b.position).map(list =>
+            <ListComponent
+              className="mr-3 mh-100"
+              list={list}
+              cards={cards.filter(card => card.listId == list.id)}
+              cardChanged={props.cardChanged}/>
+          )}
+        </ModalContext.Provider>
       </BoardContext.Provider>
     </div>
   );

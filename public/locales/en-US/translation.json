@@ -62,7 +62,7 @@
     "privateBoard": "Only team members can see and change this board.",
     "teamName": "Team name",
     "imageUrl": "Image url",
-    "emptyCard": "Create or drop a card here"
+    "emptyList": "Create or drop a card here"
   },
   "pageTitle": {
     "newBoard": "New board - {{name}}",
