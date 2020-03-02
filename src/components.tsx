@@ -21,14 +21,17 @@ interface FooterProps {
   className?: string;
 }
 
-function useSearch<T>(arr: T[], map: (T) => string) {
+export function useSearch<T>(arr: T[], map: (T) => string) {
   const [state, setState] = React.useState(arr);
-  const func = (text: string) => setState(arr.filter(item => map(item).includes(text)));
+  const func = (text: string) => setState(arr.filter(item => {
+    const m = map(item).toLowerCase();
+    return m.includes(text.toLowerCase());
+  }));
 
   return [func, state];
 }
 
-function useModal() {
+export function useModal() {
   const [state, setState] = React.useState({
     element: null,
   });
@@ -73,7 +76,43 @@ function useModal() {
   return modal;
 }
 
-function Sticky(props: StickyProps) {
+export function AsyncComponent(props: any) {
+  const [state, setState] = React.useState({
+    code: 1,
+    result: null,
+  });
+
+  React.useEffect(() => {
+    props.func.apply(props.args[0], props.args.slice(1, props.func.length + 1))
+      .then(value => {
+        setState({
+          code: 2,
+          result: value,
+        });
+      }, reason => {
+        setState({
+          code: 0,
+          result: reason,
+        });
+      });
+  }, []);
+
+  switch(state.code) {
+    case 2: {
+      return props.ok(state.result);
+    };
+
+    case 1: {
+      return props.loading();
+    };
+
+    default: {
+      return props.fail(state.result);
+    };
+  }
+}
+
+export function Sticky(props: StickyProps) {
   const ref = React.useRef<HTMLElement>();
 
   async function onScrollHandler(container: HTMLElement, target: HTMLElement) {
@@ -113,7 +152,7 @@ function Sticky(props: StickyProps) {
   };
 }
 
-function ActivityComponent(props: ActivityComponentProps) {
+export function ActivityComponent(props: ActivityComponentProps) {
   const { activity } = props;
 
   function getBody() {
@@ -292,7 +331,7 @@ function ActivityComponent(props: ActivityComponentProps) {
   return element;
 }
 
-function Footer(props: FooterProps) {
+export function Footer(props: FooterProps) {
   const date = new Date();
 
   return (
@@ -319,13 +358,3 @@ function Footer(props: FooterProps) {
     </footer>
   );
 }
-
-export {
-  useSearch,
-  useModal,
-  useContextModal,
-  ModalContext,
-  Sticky,
-  ActivityComponent,
-  Footer,
-};

@@ -53,8 +53,8 @@ function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
   return pos;
 }
 
-function BoardComponent(props: BoardComponentProps) {
-  const { board, lists, cards } = props;
+function BoardComponent(boardProps: BoardComponentProps) {
+  const { board, lists, cards } = boardProps;
   const modal = useModal();
   const { t } = useTranslation();
   const [boardDropProps, boardDropRef] = useDrop({
@@ -66,8 +66,8 @@ function BoardComponent(props: BoardComponentProps) {
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#board-${board.id}`);
 
-      if (props.listChanged) {
-        props.listChanged({...item.list}, {
+      if (boardProps.listChanged) {
+        boardProps.listChanged({...item.list}, {
           position: getPositionFromPoint(x, y, elem.children)
         });
       }
@@ -76,19 +76,19 @@ function BoardComponent(props: BoardComponentProps) {
 
   function removeCard(cardId: string) {
     const card = cards.find(card => card.id == cardId);
-    props.cardRemoved({...card});
+    boardProps.cardRemoved({...card});
   }
 
   function removeLabel(cardId: string, labelId: string) {
     const card = cards.find(card => card.id == cardId);
-    props.cardChanged({...card}, {
+    boardProps.cardChanged({...card}, {
       labelIds: card.labelIds.filter(label => label != labelId),
     });
   }
 
   function addLabel(cardId: string, labelId: string) {
     const card = cards.find(card => card.id == cardId);
-    props.cardChanged({...card}, {
+    boardProps.cardChanged({...card}, {
       labelIds: card.labelIds.concat([labelId]),
     });
   }
@@ -256,12 +256,10 @@ function BoardComponent(props: BoardComponentProps) {
         const { x, y } = monitor.getClientOffset();
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
 
-        if (props.cardChanged) {
-          props.cardChanged({...item.card}, {
-            position: getPositionFromPoint(x, y, elem.children),
-            listId: list.id
-          });
-        }
+        boardProps.cardChanged({...item.card}, {
+          position: getPositionFromPoint(x, y, elem.children),
+          listId: list.id
+        });
       }
     });
 
@@ -310,16 +308,16 @@ function BoardComponent(props: BoardComponentProps) {
     </div>
   );
 
-  if (props.as) {
-    elem.type = props.as;
-    elem.props = {
-      ...props.as.props,
+  if (boardProps.as) {
+    elem.type = boardProps.as;
+    elem.boardProps = {
+      ...boardProps.as.props,
       ...elem.props
     };
   }
 
-  if (props.className) {
-    elem.props.className += " " + props.className;
+  if (boardProps.className) {
+    elem.props.className += " " + boardProps.className;
   }
 
   return elem;
@@ -430,24 +428,42 @@ export default function BoardPage({ match }) {
             const newCards = [...localState.cards];
             const index = newCards.findIndex(c => c.id == card.id);
 
+            if (changes.position != null) {
+              for (const c of newCards) {
+                if (c.position > card.position && c.listId == card.listId) {
+                  c.position--;
+                }
+
+                if (c.position >= changes.position && c.listId == changes.listId) {
+                  c.position++;
+                }
+              }
+
+              newCards[index].position = changes.position;
+            }
+
+            if (changes.listId) {
+              newCards[index].listId = changes.listId;
+            }
+
+            if (changes.labelIds) {
+              newCards[index].labelIds = changes.labelIds;
+            }
+
+            setLocalState({
+              ...localState,
+              cards: newCards
+            });
+
             api.updateCard(card.list.boardId, card.listId, card.id, {
               position: changes.position,
               listId: changes.listId,
               labelIds: changes.labelIds,
-            }).then(updated => {
-              if (changes.position != null) {
-                for (const c of newCards) {
-                  if (c.position > card.position && c.listId == card.listId) {
-                    c.position--;
-                  }
+            }).catch(() => {
+              newCards = [...localState.cards];
+              index = newCards.findIndex(c => c.id == card.id);
+              newCards[index] = card;
 
-                  if (c.position >= changes.position && c.listId == changes.listId) {
-                    c.position++;
-                  }
-                }
-              }
-
-              newCards[index] = updated;
               setLocalState({
                 ...localState,
                 cards: newCards

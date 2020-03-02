@@ -145,10 +145,10 @@ export interface Activity {
   card?: Card;
 }
 
-class FragioAPIRequestOptions {
+class ApiRequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE" = "GET";
   useToken?: boolean = false;
-  body?: any = undefined;
+  body?: any = null;
 }
 
 export class FragioAPI {
@@ -160,19 +160,19 @@ export class FragioAPI {
     this.token = token;
   }
 
-  async request<T>(endpoint: string, options?: FragioAPIRequestOptions, resolve: (data: any) => T = (e) => e as T) : Promise<T> {
+  async request<T>(endpoint: string, options: ApiRequestOptions = new ApiRequestOptions, resolve: (data: any) => T = (e) => e as T) : Promise<T> {
     const res = await fetch(`${this.url}/${endpoint}`, {
-      method: options && options.method || "GET",
+      method: options.method,
       headers: {
-        "Authorization": options && options.useToken && this.token ? `Bearer ${this.token}` : undefined,
-        "Content-Type": options && options.body ? "application/json" : undefined
+        "Authorization": options.useToken && this.token ? `Bearer ${this.token}` : undefined,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(options.body)
     });
 
     const contentType = res.headers.get("Content-Type");
 
-    if (!res.ok) return Promise.reject(res.statusText);
+    if (!res.ok) return Promise.reject([res.statusCode, res.statusText]);
     if (contentType && contentType.includes("application/json"))
     {
       return resolve(await res.json());
@@ -293,14 +293,14 @@ export class FragioAPI {
     });
   }
 
-  async joinTeam(teamId: string, username: string) : Promise<Member> {
+  async createMember(teamId: string, username: string) : Promise<Member> {
     return this.request(`api/v1/team/${teamId}/members/${username}`, {
       method: "PUT",
       useToken: true,
     });
   }
 
-  async leaveTeam(teamId: string, username: string) : Promise<void> {
+  async deleteMember(teamId: string, username: string) : Promise<void> {
     return this.request(`api/v1/team/${teamId}/members/${username}`, {
       method: "DELETE",
       useToken: true,
