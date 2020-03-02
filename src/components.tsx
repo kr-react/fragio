@@ -28,15 +28,8 @@ function useSearch<T>(arr: T[], map: (T) => string) {
   return [func, state];
 }
 
-const ModalContext = React.createContext(null);
-
-function useContextModal() {
-  return React.useContext(ModalContext);
-}
-
-function useModal(com?: JSX.Element) {
+function useModal() {
   const [state, setState] = React.useState({
-    component: com,
     element: null,
   });
 
@@ -60,28 +53,21 @@ function useModal(com?: JSX.Element) {
     });
 
     return () => {
-      document.body.removeChild(elem);
+      $(elem).modal("hide");
+      setTimeout(() => {
+        document.body.removeChild(elem);
+      }, 2000);
     };
   }, []);
 
-  React.useEffect(() => {
-    if (state.component && state.element) {
-      ReactDOM.render(state.component, state.element.firstElementChild);
-      $(state.element).modal();
-    } else {
+  function modal(com?: (HTMLDivElement) => JSX.Element) {
+    if (!com) {
       $(state.element).modal("hide");
-    }
-  }, [state]);
-
-  function modal(component?: JSX.Element | "isOpen") {
-    if (component == "isOpen") {
-      return state.component && state.element;
+      return;
     }
 
-    setState({
-      ...state,
-      component,
-    });
+    ReactDOM.render(com(state.element), state.element.firstElementChild);
+    $(state.element).modal();
   }
 
   return modal;

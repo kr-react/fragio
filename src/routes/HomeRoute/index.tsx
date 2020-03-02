@@ -6,7 +6,6 @@ import {
   ApplicationState,
   User,
 } from "~/src/common";
-import { useModal, ModalContext } from "~/src/components";
 import HomePage from "./HomePage.tsx";
 import BoardPage from "./BoardPage.tsx";
 import TeamPage from "./TeamPage.tsx";
@@ -16,7 +15,6 @@ import NewTeamPage from "./NewTeamPage.tsx";
 
 export default function HomeRoute({ match }) {
   const dispatch = useDispatch();
-  const modal = useModal();
   const { t } = useTranslation();
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const [state, setState] = React.useState({
@@ -72,16 +70,14 @@ export default function HomeRoute({ match }) {
           </li>
         </ul>
       </nav>
-      <ModalContext.Provider value={modal}>
-        <Switch>
-          <Route exact path="/" component={HomePage}/>
-          <Route exact path="/board/:id" component={BoardPage}/>
-          <Route exact path="/team/:id" component={TeamPage}/>
-          <Route exact path="/user/:username" component={UserPage}/>
-          <Route exact path="/newboard" component={NewBoardPage}/>
-          <Route exact path="/newteam" component={NewTeamPage}/>
-        </Switch>
-      </ModalContext.Provider>
+      <Switch>
+        <Route exact path="/" component={HomePage}/>
+        <Route exact path="/board/:id" component={BoardPage}/>
+        <Route exact path="/team/:id" component={TeamPage}/>
+        <Route exact path="/user/:username" component={UserPage}/>
+        <Route exact path="/newboard" component={NewBoardPage}/>
+        <Route exact path="/newteam" component={NewTeamPage}/>
+      </Switch>
     </div>
   );
 }

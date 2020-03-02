@@ -53,6 +53,7 @@
     "searchLabels": "Search all labels...",
     "createTeam": "Create a new Team",
     "createBoard": "Create a new Board",
+    "createLabel": "Create a new Label",
     "save": "Save"
   },
   "desc": {

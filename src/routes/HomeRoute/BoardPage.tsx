@@ -9,6 +9,7 @@ import {
   useContextModal,
   ActivityComponent,
   Footer,
+  useModal,
 } from "~/src/components";
 import {
   FragioAPI,
@@ -53,8 +54,8 @@ function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
 }
 
 function BoardComponent(props: BoardComponentProps) {
-  const { board, lists, cards, api } = props;
-  const modal = useContextModal();
+  const { board, lists, cards } = props;
+  const modal = useModal();
   const { t } = useTranslation();
   const [boardDropProps, boardDropRef] = useDrop({
     accept: ["list"],
@@ -118,14 +119,19 @@ function BoardComponent(props: BoardComponentProps) {
   }
 
   function openModal(card: Card) {
-    modal(
+    if (!card) {
+      modal();
+      return;
+    }
+
+    modal(() =>
       <div className="modal-content">
         <div className="modal-header">
           <h6 className="modal-title">{card.name}</h6>
           <button
             className="close"
             aria-label="Close"
-            onClick={() => modal(false)}>
+            onClick={() => modal()}>
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -174,40 +180,21 @@ function BoardComponent(props: BoardComponentProps) {
         </div>
         <div className="modal-footer">
           <button
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              modal();
+              removeCard(card.id);
+            }}>
+            {t("action.save")}
+          </button>
+          <button
             className="btn btn-danger btn-sm"
             onClick={() => {
-              modal(false);
+              modal();
               removeCard(card.id);
             }}>
             {t("action.remove")}
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  function CardModal(props: {card: Card}) {
-    const ref = React.useRef<HTMLDivElement>();
-
-    React.useEffect(() => {
-
-    });
-
-    React.useEffect(() => {
-      if (ref.current) {
-        $(ref.current).modal();
-      }
-    }, [ref]);
-
-    return (
-      <div
-        className="modal"
-        tabIndex="-1"
-        role="dialog">
-        <div
-          className="modal-dialog"
-          role="document">
-
         </div>
       </div>
     );
@@ -317,9 +304,9 @@ function BoardComponent(props: BoardComponentProps) {
       ref={boardDropRef}
       id={`board-${board.id}`}
       className="overflow-auto p-3 d-flex flex-row align-items-start">
-        {lists.sort((a, b) => a.position - b.position).map(list =>
-          <ListComponent list={list}/>
-        )}
+      {lists.sort((a, b) => a.position - b.position).map(list =>
+        <ListComponent list={list}/>
+      )}
     </div>
   );
 
@@ -525,6 +512,100 @@ export default function BoardPage({ match }) {
 
   function LabelsTab() {
     const [search, labels] = useSearch(localState.board.labels, a => a.name.toLowerCase());
+    const modal = useModal();
+
+    function randomNumber(max: number) {
+      return Math.floor(Math.random() * Math.floor(max));
+    }
+
+    function LabelModal() {
+      const [color, setColor] = React.useState((randomNumber(0xFFFFFF)).toString(16));
+
+      return (
+        <form
+          noValidate
+          className="modal-content"
+          onSubmit={e => {
+            e.preventDefault();
+            const data = new FormData(e.currentTarget);
+
+            api.createLabel(localState.board.id, {
+              name: data.get("name"),
+              color: Number("0x" + data.get("color")),
+            }).then(label => {
+              setLocalState({
+                ...localState,
+                board: {
+                  ...localState.board,
+                  labels: localState.board.labels.concat([label])
+                }
+              });
+            });
+          }}>
+          <div className="modal-header">
+            <h6 className="modal-title">
+              {t("action.createLabel")}
+            </h6>
+            <button
+              className="close"
+              aria-label="Close"
+              onClick={() => modal()}>
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div className="modal-body">
+            <div className="form-group input-group">
+              <div className="input-group-prepend">
+                <label
+                  className="input-group-text"
+                  for="name">
+                  {t("name")}
+                </label>
+              </div>
+              <input
+                name="name"
+                required
+                className="form-control"
+                autofocus
+                type="text"/>
+            </div>
+            <div className="form-group input-group">
+              <div className="input-group-prepend">
+                <label
+                  className="input-group-text"
+                  for="color">
+                  <div
+                    className="rounded-circle"
+                    style={{
+                      backgroundColor: "#" + color,
+                      width: "20px",
+                      height: "20px"
+                    }}></div>
+                </label>
+                <label
+                  className="input-group-text"
+                  for="color">
+                  {"#"}
+                </label>
+              </div>
+              <input
+                name="color"
+                className="form-control text-uppercase"
+                pattern="[A-f0-9]{0,8}"
+                value={color}
+                onChange={e => setColor(e.currentTarget.value)}
+                type="text"/>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <input
+              type="submit"
+              className="btn btn-primary btn-sm"
+              value={t("action.create")}/>
+          </div>
+        </form>
+      );
+    }
 
     return (
       <div className="card">
@@ -541,6 +622,11 @@ export default function BoardPage({ match }) {
               aria-label="Search"
               onChange={e => search(e.currentTarget.value.toLowerCase())}/>
           </div>
+          <button
+            className="btn btn-outline-primary btn-sm ml-2"
+            onClick={() => modal(() => <LabelModal/>)}>
+            {t("action.new")}
+          </button>
         </div>
         <ul className="list-group list-group-flush">
           {labels.map(label =>
