@@ -1,13 +1,12 @@
 import * as React from "react";
+import * as $ from "jquery";
 import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
 import {
-  useModal,
-  useModalContext,
   useSearch,
-  ModalContext,
+  useContextModal,
   ActivityComponent,
   Footer,
 } from "~/src/components";
@@ -20,36 +19,18 @@ import {
   Activity,
 } from "~/src/common";
 
-interface CardComponentProps {
-  card: Card;
-  onClick?: (e: HTMLMouseEvent<HTMLDivElement>) => void;
-}
-
-interface ListComponentProps {
-  list: List;
-  cards: Card[];
-  cardChanged?: (card: Card, changes: any) => void;
-}
-
 interface BoardComponentProps {
   className?: string;
   as?: JSX.Element | string;
   board: Board;
   lists: List[];
   cards: Card[];
-  listChanged?: (list: List, changes: any) => void;
-  cardChanged?: (card: Card, changes: any) => void;
-}
-
-const BoardContext = React.createContext(null);
-const ListContext = React.createContext(null);
-
-function useBoard() {
-  return React.useContext(BoardContext);
-}
-
-function useList() {
-  return React.useContext(ListContext);
+  api: FragioAPI;
+  boardChanged: (card: List, props: any) => void;
+  listChanged: (list: List, props: any) => void;
+  cardChanged: (card: Card, props: any) => void;
+  listRemoved: (list: List) => void;
+  cardRemoved: (card: Card) => void;
 }
 
 function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
@@ -71,167 +52,11 @@ function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
   return pos;
 }
 
-const CardComponent = React.memo((props: CardComponentProps) => {
-  const { card } = props;
-  const board = useBoard();
-  const [{ display }, dragRef] = useDrag({
-    item: { type: "card", card },
-    collect: monitor => ({
-      display: monitor.isDragging() ? "none" : undefined,
-    }),
-  });
-
-  function getUrlsFromString(str: string) {
-      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
-      return pattern.exec(str) || [];
-  }
-
-  function getImagesFromString(str: string) {
-      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)\.(jpg|png)/;
-      return pattern.exec(str) || [];
-  }
-
-  function getLabels() {
-    return board.labels
-      .filter(label => card.labelIds.includes(label.id));
-  }
-
-  return (
-    <div
-      ref={dragRef}
-      className="card shadow-sm mb-2 pointer"
-      onClick={props.onClick}
-      style={{display}}>
-      {getImagesFromString(card.description).length > 0 &&
-        <img
-          className="card-img-top"
-          src={getImagesFromString(card.description)[0]}
-          alt="Card image"/>
-      }
-      <div className="card-body p-2">
-        <div className="d-flex flex-row flex-wrap mb-2">
-          {getLabels().map(label =>
-            <span
-              className="badge badge-secondary mr-1 mt-1"
-              style={{
-                backgroundColor: `#${label.color.toString(16)}`
-              }}>
-              {label.name}
-            </span>
-          )}
-        </div>
-        <span>{card.name}</span>
-      </div>
-    </div>
-  );
-});
-
-const ListComponent = React.memo((props: ListComponentProps) => {
-  const { list, cards } = props;
-  const modal = useModalContext();
-  const board = useBoard();
-  const { t } = useTranslation();
-  const [{ display }, dragRef] = useDrag({
-    item: { type: "list", list },
-    collect: monitor => ({
-      display: monitor.isDragging() ? "none" : undefined,
-    }),
-  });
-  const [dropProps, dropRef] = useDrop({
-    accept: ["card"],
-    options: {
-      arePropsEqual: (a, b) => a.card.id == b.card.id,
-    },
-    hover: (item, monitor) => {
-      const { x, y } = monitor.getClientOffset();
-      const elem = document.querySelector(`#list-${list.id} > .card-body`);
-      const i = getPositionFromPoint(x, y, elem.children);
-    },
-    drop: (item, monitor) => {
-      const { x, y } = monitor.getClientOffset();
-      const elem = document.querySelector(`#list-${list.id} > .card-body`);
-
-      if (props.cardChanged) {
-        props.cardChanged({...item.card}, {
-          position: getPositionFromPoint(x, y, elem.children),
-          listId: list.id
-        });
-      }
-    }
-  });
-
-  return (
-    <div
-      ref={dragRef}
-      id={`list-${list.id}`}
-      className="card shadow-sm mr-3 mh-100"
-      style={{
-      width: "300px",
-      minWidth: "300px",
-      display,
-    }}>
-      <div className="card-header d-flex flex-row justify-content-between align-items-center">
-        <b>{list.name}</b>
-        <span className="badge badge-secondary">
-          {cards.length}
-        </span>
-      </div>
-      <div
-        ref={dropRef}
-        className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
-        <ListContext.Provider value={list}>
-          {cards.sort((a, b) => a.position - b.position).map(card =>
-            <CardComponent
-              card={card}
-              onClick={() => {
-                const labels = board.labels
-                  .filter(label => card.labelIds.includes(label.id));
-
-                modal(
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h6 className="modal-title">{card.name}</h6>
-                      <button
-                        className="close"
-                        aria-label="Close"
-                        onClick={() => modal(false)}>
-                        <span aria-hidden="true">&times;</span>
-                      </button>
-                    </div>
-                    <div className="modal-body">
-                      <div className="d-flex flex-row flex-wrap">
-                        {labels.map(label =>
-                          <button
-                            className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
-                            style={{
-                              backgroundColor: `#${label.color.toString(16)}`,
-                              borderColor: `#${label.color.toString(16)}`,
-                            }}>
-                            <span>{label.name}</span>
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-wrap">{card.description}</p>
-                    </div>
-                  </div>
-                );
-              }}/>
-          )}
-          {cards.length == 0 &&
-            <div className="text-muted mb-2 text-center">
-              {t("desc.emptyList")}
-            </div>
-          }
-        </ListContext.Provider>
-      </div>
-    </div>
-  );
-});
-
 function BoardComponent(props: BoardComponentProps) {
-  const { board, lists, cards } = props;
-  const modal = useModal();
-  const [dropProps, dropRef] = useDrop({
+  const { board, lists, cards, api } = props;
+  const modal = useContextModal();
+  const { t } = useTranslation();
+  const [boardDropProps, boardDropRef] = useDrop({
     accept: ["list"],
     options: {
       arePropsEqual: (a, b) => a.list.id == b.list.id,
@@ -248,22 +73,253 @@ function BoardComponent(props: BoardComponentProps) {
     }
   });
 
+  function removeCard(cardId: string) {
+    const card = cards.find(card => card.id == cardId);
+    props.cardRemoved({...card});
+  }
+
+  function removeLabel(cardId: string, labelId: string) {
+    const card = cards.find(card => card.id == cardId);
+    props.cardChanged({...card}, {
+      labelIds: card.labelIds.filter(label => label != labelId),
+    });
+  }
+
+  function addLabel(cardId: string, labelId: string) {
+    const card = cards.find(card => card.id == cardId);
+    props.cardChanged({...card}, {
+      labelIds: card.labelIds.concat([labelId]),
+    });
+  }
+
+  function getCards(listId: string) {
+    return cards.filter(card => card.listId == listId)
+      .sort((a, b) => a.position - b.position);
+  }
+
+  function getLabels(cardId: string) {
+    const ids = cards.find(card => card.id == cardId).labelIds;
+    return board.labels.filter(label => ids.includes(label.id));
+  }
+
+  function getUnusedLabels(cardId: string) {
+    const ids = cards.find(card => card.id == cardId).labelIds;
+    return board.labels.filter(label => !ids.includes(label.id));
+  }
+
+  function getUrlsFromString(str: string) {
+      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
+      return pattern.exec(str) || [];
+  }
+
+  function getImagesFromString(str: string) {
+      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)\.(jpg|png)/;
+      return pattern.exec(str) || [];
+  }
+
+  function openModal(card: Card) {
+    modal(
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className="modal-title">{card.name}</h6>
+          <button
+            className="close"
+            aria-label="Close"
+            onClick={() => modal(false)}>
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="d-flex flex-row flex-wrap">
+            {getLabels(card.id).map(label =>
+              <button
+                className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
+                onClick={() => removeLabel(card.id, label.id)}
+                style={{
+                  backgroundColor: `#${label.color.toString(16)}`,
+                  borderColor: `#${label.color.toString(16)}`,
+                }}>
+                <span>{label.name}</span>
+              </button>
+            )}
+            <div className="dropdown">
+              <button
+                class="btn btn-secondary btn-sm dropdown-toggle mr-2 mb-2"
+                id="labels-dropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false">
+                {t("action.new")}
+              </button>
+              <div
+                className="dropdown-menu"
+                aria-labelledby="labels-dropdown">
+                {getUnusedLabels(card.id).map(label =>
+                  <span
+                    className="dropdown-item pointer"
+                    onClick={() => addLabel(card.id, label.id)}
+                    href="#">
+                    {label.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="text-wrap">
+            {card.description}
+            {!card.description &&
+              <span className="text-muted">{t("desc.noDescription")}</span>
+            }
+          </p>
+        </div>
+        <div className="modal-footer">
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => {
+              modal(false);
+              removeCard(card.id);
+            }}>
+            {t("action.remove")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  function CardModal(props: {card: Card}) {
+    const ref = React.useRef<HTMLDivElement>();
+
+    React.useEffect(() => {
+
+    });
+
+    React.useEffect(() => {
+      if (ref.current) {
+        $(ref.current).modal();
+      }
+    }, [ref]);
+
+    return (
+      <div
+        className="modal"
+        tabIndex="-1"
+        role="dialog">
+        <div
+          className="modal-dialog"
+          role="document">
+
+        </div>
+      </div>
+    );
+  }
+
+  function CardComponent(props: {card: Card}) {
+    const { card } = props;
+    const [{ display }, cardDragRef] = useDrag({
+      item: { type: "card", card },
+      collect: monitor => ({
+        display: monitor.isDragging() ? "none" : undefined,
+      }),
+    });
+
+    return (
+      <div
+        ref={cardDragRef}
+        className="card shadow-sm mb-2 pointer"
+        onClick={() => openModal(card)}
+        style={{display}}>
+        {getImagesFromString(card.description).length > 0 &&
+          <img
+            className="card-img-top"
+            src={getImagesFromString(card.description)[0]}
+            alt="Card image"/>
+        }
+        <div className="card-body p-2">
+          <div className="d-flex flex-row flex-wrap mb-2">
+            {getLabels(card.id).map(label =>
+              <span
+                className="badge badge-secondary mr-1 mt-1"
+                style={{
+                  backgroundColor: `#${label.color.toString(16)}`
+                }}>
+                {label.name}
+              </span>
+            )}
+          </div>
+          <span>{card.name}</span>
+        </div>
+      </div>
+    );
+  }
+
+  function ListComponent(props: {list: List}) {
+    const { list } = props;
+    const [{ display }, listDragRef] = useDrag({
+      item: { type: "list", list },
+      collect: monitor => ({
+        display: monitor.isDragging() ? "none" : undefined,
+      }),
+    });
+    const [listDropProps, listDropRef] = useDrop({
+      accept: ["card"],
+      options: {
+        arePropsEqual: (a, b) => a.card.id == b.card.id,
+      },
+      drop: (item, monitor) => {
+        const { x, y } = monitor.getClientOffset();
+        const elem = document.querySelector(`#list-${list.id} > .card-body`);
+
+        if (props.cardChanged) {
+          props.cardChanged({...item.card}, {
+            position: getPositionFromPoint(x, y, elem.children),
+            listId: list.id
+          });
+        }
+      }
+    });
+
+    const cards = getCards(list.id);
+
+    return (
+      <div
+        ref={listDragRef}
+        id={`list-${list.id}`}
+        className="card shadow-sm mr-3 mh-100"
+        style={{
+        width: "300px",
+        minWidth: "300px",
+        display,
+      }}>
+        <div className="card-header d-flex flex-row justify-content-between align-items-center">
+          <b>{list.name}</b>
+          <span className="badge badge-secondary">
+            {cards.length}
+          </span>
+        </div>
+        <div
+          ref={listDropRef}
+          className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
+          {cards.map(card =>
+            <CardComponent card={card}/>
+          )}
+          {cards.length == 0 &&
+            <div className="text-muted mb-2 text-center">
+              {t("desc.emptyList")}
+            </div>
+          }
+        </div>
+      </div>
+    );
+  }
+
   const elem = (
     <div
-      ref={dropRef}
+      ref={boardDropRef}
       id={`board-${board.id}`}
       className="overflow-auto p-3 d-flex flex-row align-items-start">
-      <BoardContext.Provider value={board}>
-        <ModalContext.Provider value={modal}>
-          {lists.sort((a, b) => a.position - b.position).map(list =>
-            <ListComponent
-              className="mr-3 mh-100"
-              list={list}
-              cards={cards.filter(card => card.listId == list.id)}
-              cardChanged={props.cardChanged}/>
-          )}
-        </ModalContext.Provider>
-      </BoardContext.Provider>
+        {lists.sort((a, b) => a.position - b.position).map(list =>
+          <ListComponent list={list}/>
+        )}
     </div>
   );
 
@@ -349,6 +405,7 @@ export default function BoardPage({ match }) {
           board={localState.board}
           lists={localState.lists}
           cards={localState.cards}
+          api={api}
           listChanged={(list, changes) => {
             const newLists = [...localState.lists];
             const index = newLists.findIndex(l => l.id == list.id);
@@ -386,37 +443,47 @@ export default function BoardPage({ match }) {
             const newCards = [...localState.cards];
             const index = newCards.findIndex(c => c.id == card.id);
 
-            if (changes.position != null) {
-              for (const c of newCards) {
-                if (c.position > card.position && c.listId == card.listId) {
-                  c.position--;
-                }
-
-                if (c.position >= changes.position && c.listId == changes.listId) {
-                  c.position++;
-                }
-              }
-
-              newCards[index].position = changes.position;
-              newCards[index].listId = changes.listId;
-              newCards[index].list = localState.lists.find(list => list.id == changes.listId);
-            }
-
-            setLocalState({
-              ...localState,
-              cards: newCards
-            });
-
             api.updateCard(card.list.boardId, card.listId, card.id, {
               position: changes.position,
               listId: changes.listId,
-            }).catch(() => {
-              newCards[index].position = card.position;
-              newCards[index].listId = card.listId;
-              newCards[index].list = card.list;
+              labelIds: changes.labelIds,
+            }).then(updated => {
+              if (changes.position != null) {
+                for (const c of newCards) {
+                  if (c.position > card.position && c.listId == card.listId) {
+                    c.position--;
+                  }
+
+                  if (c.position >= changes.position && c.listId == changes.listId) {
+                    c.position++;
+                  }
+                }
+              }
+
+              newCards[index] = updated;
               setLocalState({
                 ...localState,
                 cards: newCards
+              });
+            });
+          }}
+          cardRemoved={card => {
+            api.deleteCard(card.list.boardId, card.listId, card.id)
+              .then(() => {
+                setLocalState({
+                  ...localState,
+                  cards: localState.cards.filter(c => c.id != card.id)
+                });
+              });
+          }}
+          labelRemoved={label => {
+            api.deleteLabel(label.boardId, label.id).then(() => {
+              setLocalState({
+                ...localState,
+                board: {
+                  ...localState.board,
+                  labels: localState.board.labels.filter(l => l.id != label.id)
+                }
               });
             });
           }}/>

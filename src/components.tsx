@@ -5,8 +5,6 @@ import * as $ from "jquery";
 import { Link } from "react-router-dom";
 import { Activity } from "~/src/common";
 
-const ModalContext = React.createContext(null);
-
 interface StickyProps {
   children: JSX.Element;
   onScroll: (e: HTMLElement) => void;
@@ -30,41 +28,63 @@ function useSearch<T>(arr: T[], map: (T) => string) {
   return [func, state];
 }
 
-function useModalContext() {
+const ModalContext = React.createContext(null);
+
+function useContextModal() {
   return React.useContext(ModalContext);
 }
 
-function useModal() {
-  const elem = document.createElement("div");
-  const dialog = document.createElement("div");
-
-  elem.setAttribute("class", "modal fade");
-  elem.setAttribute("tabindex", "-1");
-  elem.setAttribute("role", "dialog");
-
-  dialog.setAttribute("class", "modal-dialog");
-  dialog.setAttribute("role", "document");
-
-  document.body.appendChild(elem);
-  elem.appendChild(dialog);
-
-  function show(render?: JSX.Element | false) {
-    if (!render) {
-      $(elem).modal("hide");
-      return;
-    }
-
-    ReactDOM.render(render, dialog);
-    $(elem).modal();
-  }
+function useModal(com?: JSX.Element) {
+  const [state, setState] = React.useState({
+    component: com,
+    element: null,
+  });
 
   React.useEffect(() => {
+    const elem = document.createElement("div")
+    const dialog = document.createElement("div");
+
+    elem.setAttribute("class", "modal fade");
+    elem.setAttribute("tabindex", "-1");
+    elem.setAttribute("role", "dialog");
+
+    dialog.setAttribute("class", "modal-dialog");
+    dialog.setAttribute("role", "document");
+
+    document.body.appendChild(elem);
+    elem.appendChild(dialog);
+
+    setState({
+      ...state,
+      element: elem,
+    });
+
     return () => {
       document.body.removeChild(elem);
     };
   }, []);
 
-  return show;
+  React.useEffect(() => {
+    if (state.component && state.element) {
+      ReactDOM.render(state.component, state.element.firstElementChild);
+      $(state.element).modal();
+    } else {
+      $(state.element).modal("hide");
+    }
+  }, [state]);
+
+  function modal(component?: JSX.Element | "isOpen") {
+    if (component == "isOpen") {
+      return state.component && state.element;
+    }
+
+    setState({
+      ...state,
+      component,
+    });
+  }
+
+  return modal;
 }
 
 function Sticky(props: StickyProps) {
@@ -317,7 +337,7 @@ function Footer(props: FooterProps) {
 export {
   useSearch,
   useModal,
-  useModalContext,
+  useContextModal,
   ModalContext,
   Sticky,
   ActivityComponent,
