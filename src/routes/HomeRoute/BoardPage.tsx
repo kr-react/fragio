@@ -310,7 +310,21 @@ function BoardComponent(boardProps: BoardComponentProps) {
           <span className="badge badge-secondary">
             {cards.length}
           </span>
-          <b className="mx-2">{list.name}</b>
+          <b
+            className="mx-2"
+            contentEditable={true}
+            onBlur={e => {
+              const name = e.currentTarget.innerHTML;
+
+              if (name == list.name)
+                return;
+
+              boardProps.listChanged({...list}, {
+                name,
+              });
+            }}>
+            {list.name}
+          </b>
           <div className="dropdown">
             <button
               type="button"
@@ -321,8 +335,8 @@ function BoardComponent(boardProps: BoardComponentProps) {
               aria-expanded="false">
               <Icon
                 name="menu"
-                width="1rem"
-                height="1rem"/>
+                width="16"
+                height="16"/>
             </button>
             <div
               className="dropdown-menu shadow-sm"
@@ -344,11 +358,6 @@ function BoardComponent(boardProps: BoardComponentProps) {
                   });
                 }}>
                 {t("action.moveRight")}
-              </span>
-              <div class="dropdown-divider"></div>
-              <span
-                className="dropdown-item pointer">
-                {t("action.rename")}
               </span>
               <div class="dropdown-divider"></div>
               <span
@@ -509,15 +518,23 @@ export default function BoardPage({ match }) {
               newLists[index].position = changes.position;
             }
 
+            if (changes.name) {
+              newLists[index].name = changes.name;
+            }
+
             setLocalState({
               ...localState,
               lists: newLists
             });
 
             api.updateList(list.boardId, list.id, {
-              position: changes.position
+              name: changes.name,
+              position: changes.position,
             }).catch(() => {
-              newLists[index].position = list.position;
+              newLists = [...localState.lists];
+              index = newLists.findIndex(l => l.id == list.id);
+              newLists[index] = list;
+
               setLocalState({
                 ...localState,
                 lists: newLists
