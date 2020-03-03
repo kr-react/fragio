@@ -6,11 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
 import {
-  useSearch,
-  useContextModal,
-  ActivityComponent,
-  Footer,
   useModal,
+  useSearch,
+  ActivityComponent,
+  Icon,
+  Footer,
 } from "~/src/components";
 import {
   FragioAPI,
@@ -20,40 +20,6 @@ import {
   Card,
   Activity,
 } from "~/src/common";
-
-interface IconProps {
-  name: string;
-  fill: string;
-  width: React.ReactText;
-  height: React.ReactText;
-}
-
-function Icon(props: IconProps) {
-  function HamburgerIcon() {
-    return (
-      <svg
-        viewBox={`0 0 515.555 515.555`}
-        fill={props.fill}
-        width={props.width}
-        height={props.height}>
-        <path d="m303.347 18.875c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
-        <path d="m303.347 212.209c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
-        <path d="m303.347 405.541c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
-      </svg>
-    );
-  }
-
-  switch (props.name) {
-    case "menu": {
-      return <HamburgerIcon/>;
-    };
-
-    default: {
-      return <svg></svg>;
-    };
-  }
-}
-
 
 interface BoardComponentProps {
   className?: string;

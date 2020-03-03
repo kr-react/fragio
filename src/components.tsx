@@ -21,6 +21,13 @@ interface FooterProps {
   className?: string;
 }
 
+interface IconProps {
+  name: string;
+  fill: string;
+  width: React.ReactText;
+  height: React.ReactText;
+}
+
 export function useSearch<T>(arr: T[], map: (T) => string) {
   const [state, setState] = React.useState(arr);
   const func = (text: string) => setState(arr.filter(item => {
@@ -108,6 +115,32 @@ export function AsyncComponent(props: any) {
 
     default: {
       return props.fail(state.result);
+    };
+  }
+}
+
+export function Icon(props: IconProps) {
+  function HamburgerIcon() {
+    return (
+      <svg
+        viewBox={`0 0 515.555 515.555`}
+        fill={props.fill}
+        width={props.width}
+        height={props.height}>
+        <path d="m303.347 18.875c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+        <path d="m303.347 212.209c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+        <path d="m303.347 405.541c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+      </svg>
+    );
+  }
+
+  switch (props.name) {
+    case "menu": {
+      return <HamburgerIcon/>;
+    };
+
+    default: {
+      return <svg></svg>;
     };
   }
 }
