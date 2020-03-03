@@ -319,6 +319,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
       {lists.sort((a, b) => a.position - b.position).map(list =>
         <ListComponent list={list}/>
       )}
+      <div className="p-1"></div>
     </div>
   );
 
