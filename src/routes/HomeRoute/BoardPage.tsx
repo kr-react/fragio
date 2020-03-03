@@ -911,20 +911,20 @@ export default function BoardPage({ match }) {
               </small>
             </div>
           </div>
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm">
-            {t("action.save")}
-          </button>
+          <div className="d-flex flex-row justify-content-between">
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm">
+              {t("action.save")}
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              onClick={() => deleteBoard()}>
+              {t("action.delete")}
+            </button>
+          </div>
         </form>
-        <h6 className="mt-3">{t("advanced")}</h6>
-        <hr/>
-        <button
-          type="button"
-          className="btn btn-danger btn-sm"
-          onClick={() => deleteBoard()}>
-          {t("action.delete")}
-        </button>
       </React.Fragment>
     );
   }
