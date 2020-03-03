@@ -578,6 +578,7 @@ export default function BoardPage({ match }) {
               {t("action.createLabel")}
             </h6>
             <button
+              type="button"
               className="close"
               aria-label="Close"
               onClick={() => modal()}>
@@ -629,10 +630,11 @@ export default function BoardPage({ match }) {
             </div>
           </div>
           <div className="modal-footer">
-            <input
+            <button
               type="submit"
-              className="btn btn-primary btn-sm"
-              value={t("action.create")}/>
+              className="btn btn-primary btn-sm">
+              {t("action.create")}
+            </button>
           </div>
         </form>
       );
@@ -784,6 +786,7 @@ export default function BoardPage({ match }) {
         <h6 className="mt-3">{t("advanced")}</h6>
         <hr/>
         <button
+          type="button"
           className="btn btn-danger btn-sm"
           onClick={() => deleteBoard()}>
           {t("action.delete")}
