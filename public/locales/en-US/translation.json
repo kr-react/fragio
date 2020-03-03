@@ -68,7 +68,9 @@
     "teamName": "Team name",
     "imageUrl": "Image url",
     "emptyList": "Create or drop a card here",
-    "noDescription": "No description"
+    "noDescription": "No description",
+    "empty": "Nothing here",
+    "error": "Oopsie.. an error occurred :/"
   },
   "pageTitle": {
     "newBoard": "New board - {{name}}",

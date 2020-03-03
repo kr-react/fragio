@@ -71,7 +71,7 @@ export default function NewBoardPage({ match }) {
         <form
           onSubmit={onSubmitHandler}>
           <div className="form-group">
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
@@ -89,7 +89,7 @@ export default function NewBoardPage({ match }) {
             </div>
           </div>
           <div className="form-group">
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
@@ -154,7 +154,7 @@ export default function NewBoardPage({ match }) {
           </div>
           <hr className="my-3" />
           <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             type="submit">
             {t("action.create")}
           </button>

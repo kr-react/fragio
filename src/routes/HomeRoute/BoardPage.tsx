@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as $ from "jquery";
+import { useHistory } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
@@ -26,7 +27,7 @@ interface BoardComponentProps {
   board: Board;
   lists: List[];
   cards: Card[];
-  api: FragioAPI;
+  editable: boolean;
   boardChanged: (card: List, props: any) => void;
   listChanged: (list: List, props: any) => void;
   cardChanged: (card: Card, props: any) => void;
@@ -302,6 +303,19 @@ function BoardComponent(boardProps: BoardComponentProps) {
       ref={boardDropRef}
       id={`board-${board.id}`}
       className="overflow-auto p-3 d-flex flex-row align-items-start">
+      {boardProps.editable &&
+        <div
+          className="shadow-sm card mh-100 bg-light p-2 mr-3 text-center pointer"
+          style={{
+            width: "300px",
+            minWidth: "300px",
+            borderStyle: "dashed",
+          }}>
+          <h6 className="text-muted my-auto">
+            {t("action.create")}
+          </h6>
+        </div>
+      }
       {lists.sort((a, b) => a.position - b.position).map(list =>
         <ListComponent list={list}/>
       )}
@@ -326,6 +340,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
 export default function BoardPage({ match }) {
   const { t } = useTranslation();
   const { user, token } = useSelector<ApplicationState>(state => state);
+  const history = useHistory();
   const api = new FragioAPI(process.env.API_URL, token);
   const [localState, setLocalState] = React.useState<{
     board: Board,
@@ -363,11 +378,11 @@ export default function BoardPage({ match }) {
     request();
   }, []);
 
-  function canEdit(user) {
+  function canEdit(u: User) {
     const { board, teams } = localState;
 
     return (board.team && teams.some(team => team.id == board.team.id))
-      || user.id == board.ownerId;
+      || u.id == board.ownerId;
   }
 
   function isOwner(u: User) {
@@ -390,7 +405,7 @@ export default function BoardPage({ match }) {
           board={localState.board}
           lists={localState.lists}
           cards={localState.cards}
-          api={api}
+          editable={canEdit(user)}
           listChanged={(list, changes) => {
             const newLists = [...localState.lists];
             const index = newLists.findIndex(l => l.id == list.id);
@@ -680,6 +695,103 @@ export default function BoardPage({ match }) {
     );
   }
 
+  function SettingsTab() {
+    function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+
+      api.updateBoard(localState.board.id, {
+        name: data.get("name"),
+        isPrivate: data.get("isPrivate") == 1
+      }).then(board => {
+        setLocalState({
+          ...localState,
+          board
+        });
+      });
+    }
+
+    function deleteBoard() {
+      return api.deleteBoard(localState.board.id).then(() => {
+        history.push("/");
+      });
+    }
+
+    return (
+      <React.Fragment>
+        <h5>{t("settings")}</h5>
+        <hr/>
+        <form onSubmit={onSubmitHandler}>
+          <div className="form-group">
+            <label
+              for="rename-input">
+              {t("desc.teamName")}
+            </label>
+            <input
+              id="rename-input"
+              type="text"
+              name="name"
+              className="form-control form-control-sm"
+              defaultValue={localState.board.name}/>
+          </div>
+          <div className="form-group">
+            <div className="form-check mb-2">
+              <input
+                className="form-check-input"
+                type="radio"
+                name="isPrivate"
+                id="public-radio"
+                value={0}
+                defaultChecked={!localState.board.isPrivate}/>
+              <label
+                className="form-check-label"
+                for="public-radio">
+                {t("public")}
+              </label>
+              <small
+                id="public-radio-help"
+                class="form-text text-muted mt-0">
+                {t("desc.publicBoard")}
+              </small>
+            </div>
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="radio"
+                name="isPrivate"
+                id="private-radio"
+                value={1}
+                defaultChecked={localState.board.isPrivate}
+                aria-describedby="private-radio-help"/>
+              <label
+                className="form-check-label"
+                for="private-radio">
+                {t("private")}
+              </label>
+              <small
+                id="private-radio-help"
+                class="form-text text-muted mt-0">
+                {t("desc.privateBoard")}
+              </small>
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm">
+            {t("action.save")}
+          </button>
+        </form>
+        <h6 className="mt-3">{t("advanced")}</h6>
+        <hr/>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={() => deleteBoard()}>
+          {t("action.delete")}
+        </button>
+      </React.Fragment>
+    );
+  }
+
   if (localState === null) {
     return <div>Not Found</div>;
   } else if (localState === undefined) {
@@ -739,6 +851,11 @@ export default function BoardPage({ match }) {
       {localState.selectedTab == 2 &&
         <main className="container pt-4">
           <LabelsTab/>
+        </main>
+      }
+      {localState.selectedTab == 3 &&
+        <main className="container pt-4">
+          <SettingsTab/>
         </main>
       }
       {localState.selectedTab > 0 && <Footer className="container"/>}

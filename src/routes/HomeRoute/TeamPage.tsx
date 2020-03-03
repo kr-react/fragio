@@ -168,9 +168,11 @@ export default function TeamPage({ match }) {
                   func={api.getBoardsFromUser}
                   args={[api, user.username]}
                   ok={value => {
+                    const available = value.filter(board => !board.teamId);
+
                     return (
                       <React.Fragment>
-                        {value.filter(board => !board.teamId).map(board =>
+                        {available.map(board =>
                           <span
                             className="dropdown-item pointer"
                             onClick={() => {
@@ -186,11 +188,18 @@ export default function TeamPage({ match }) {
                             {board.name}
                           </span>
                         )}
+                        {available.length == 0 &&
+                          <div className="text-center text-muted">
+                            <small>
+                              {t("desc.empty")}
+                            </small>
+                          </div>
+                        }
                       </React.Fragment>
                     );
                   }}
                   loading={() =>
-                    <div className="d-flex justify-content-center">
+                    <div className="text-center">
                       <div
                         className="spinner-border spinner-border-sm text-secondary"
                         role="status">
@@ -199,9 +208,11 @@ export default function TeamPage({ match }) {
                     </div>
                   }
                   fail={reason =>
-                    <span className="text-muted">
-                      {"Failed to retrive boards"}
-                    </span>
+                    <div className="text-center text-muted">
+                      <small>
+                        {t("desc.error")}
+                      </small>
+                    </div>
                   }/>
               </div>
             </div>
