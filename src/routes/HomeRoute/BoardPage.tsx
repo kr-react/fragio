@@ -307,10 +307,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
         display,
       }}>
         <div className="card-header d-flex flex-row justify-content-between align-items-center px-2">
-          <b>{list.name}</b>
-          <span className="badge badge-secondary ml-auto mr-2">
+          <span className="badge badge-secondary">
             {cards.length}
           </span>
+          <b className="mx-2">{list.name}</b>
           <div className="dropdown">
             <button
               type="button"
@@ -588,7 +588,7 @@ export default function BoardPage({ match }) {
             });
           }}
           cardCreated={(boardId, listId) => {
-            api.createCard(boardId, listId {
+            api.createCard(boardId, listId, {
               name: t("tempName.card"),
               position: 0,
             }).then(card => {
