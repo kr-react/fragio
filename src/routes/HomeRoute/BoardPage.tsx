@@ -325,7 +325,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 height="1rem"/>
             </button>
             <div
-              className="dropdown-menu"
+              className="dropdown-menu shadow-sm"
               aria-labelledby="list-menu-button">
               <span
                 className="dropdown-item pointer"
@@ -344,6 +344,11 @@ function BoardComponent(boardProps: BoardComponentProps) {
                   });
                 }}>
                 {t("action.moveRight")}
+              </span>
+              <div class="dropdown-divider"></div>
+              <span
+                className="dropdown-item pointer">
+                {t("action.rename")}
               </span>
               <div class="dropdown-divider"></div>
               <span
@@ -567,7 +572,7 @@ export default function BoardPage({ match }) {
           }}
           listCreated={boardId => {
             api.createList(boardId, {
-              name: t("name.newList"),
+              name: t("tempName.list"),
               position: 0,
             }).then(list => {
               const lists = [...localState.lists];
@@ -584,7 +589,7 @@ export default function BoardPage({ match }) {
           }}
           cardCreated={(boardId, listId) => {
             api.createCard(boardId, listId {
-              name: t("name.newCard"),
+              name: t("tempName.card"),
               position: 0,
             }).then(card => {
               const cards = [...localState.cards];

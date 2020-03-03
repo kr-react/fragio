@@ -49,6 +49,7 @@
     "refresh": "Refresh",
     "add": "Add",
     "save": "Save",
+    "rename": "Rename",
     "findBoard": "Find a board...",
     "findTeam": "Find a team...",
     "searchActivities": "Search all activities...",
@@ -74,9 +75,9 @@
     "empty": "Nothing here",
     "error": "Oopsie.. an error occurred :/"
   },
-  "name": {
-    "newCard": "New card",
-    "newList": "New list"
+  "tempName": {
+    "card": "New card",
+    "list": "New list"
   },
   "pageTitle": {
     "newBoard": "New board - {{name}}",

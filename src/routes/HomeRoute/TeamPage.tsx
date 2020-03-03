@@ -162,7 +162,7 @@ export default function TeamPage({ match }) {
                 {t("action.add")}
               </button>
               <div
-                className="dropdown-menu"
+                className="dropdown-menu shadow-sm"
                 aria-labelledby="boards-dropdown">
                 <AsyncComponent
                   func={api.getBoardsFromUser}

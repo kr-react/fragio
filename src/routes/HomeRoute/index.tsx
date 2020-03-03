@@ -53,7 +53,7 @@ export default function HomeRoute({ match }) {
                 height="25"/>
             </div>
             <div
-              className="dropdown-menu"
+              className="dropdown-menu shadow-sm"
               aria-labelledby="userctl-dropdown-toggle">
               <Link
                 className="dropdown-item"
