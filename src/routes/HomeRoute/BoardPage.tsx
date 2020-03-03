@@ -545,12 +545,12 @@ export default function BoardPage({ match }) {
     const [search, labels] = useSearch(localState.board.labels, a => a.name.toLowerCase());
     const modal = useModal();
 
-    function randomNumber(max: number) {
-      return Math.floor(Math.random() * Math.floor(max));
+    function randomNumber(min:number, max: number) {
+      return Math.floor(Math.random() * (max - min) + min);
     }
 
     function LabelModal() {
-      const [color, setColor] = React.useState((randomNumber(0xFFFFFF)).toString(16));
+      const [color, setColor] = React.useState((randomNumber(0x100000, 0xFFFFFF)).toString(16));
 
       return (
         <form
