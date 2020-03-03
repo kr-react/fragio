@@ -31,6 +31,8 @@ interface BoardComponentProps {
   boardChanged: (card: List, props: any) => void;
   listChanged: (list: List, props: any) => void;
   cardChanged: (card: Card, props: any) => void;
+  listCreated: (boardId: string) => void;
+  cardCreated: (boardId: string, listId: string) => void;
   listRemoved: (list: List) => void;
   cardRemoved: (card: Card) => void;
 }
@@ -210,30 +212,35 @@ function BoardComponent(boardProps: BoardComponentProps) {
       }),
     });
 
+    const labels = getLabels(card.id);
+    const imageUrls = getImagesFromString(card.description);
+
     return (
       <div
         ref={cardDragRef}
         className="card shadow-sm mb-2 pointer"
         onClick={() => openModal(card)}
         style={{display}}>
-        {getImagesFromString(card.description).length > 0 &&
+        {imageUrls.length > 0 &&
           <img
             className="card-img-top"
-            src={getImagesFromString(card.description)[0]}
+            src={imageUrls[0]}
             alt="Card image"/>
         }
         <div className="card-body p-2">
-          <div className="d-flex flex-row flex-wrap mb-2">
-            {getLabels(card.id).map(label =>
-              <span
-                className="badge badge-secondary mr-1 mt-1"
-                style={{
-                  backgroundColor: `#${label.color.toString(16)}`
-                }}>
-                {label.name}
-              </span>
-            )}
-          </div>
+          {labels.length > 0 &&
+            <div className="d-flex flex-row flex-wrap mb-2">
+              {labels.map(label =>
+                <span
+                  className="badge badge-secondary mr-1 mt-1"
+                  style={{
+                    backgroundColor: `#${label.color.toString(16)}`
+                  }}>
+                  {label.name}
+                </span>
+              )}
+            </div>
+          }
           <span>{card.name}</span>
         </div>
       </div>
@@ -285,6 +292,12 @@ function BoardComponent(boardProps: BoardComponentProps) {
         <div
           ref={listDropRef}
           className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm shadow-sm w-100 mb-2"
+            onClick={() => boardProps.cardCreated(board.id, list.id)}>
+            {t("action.create")}
+          </button>
           {cards.map(card =>
             <CardComponent card={card}/>
           )}
@@ -306,6 +319,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
       {boardProps.editable &&
         <div
           className="shadow-sm card mh-100 bg-light p-2 mr-3 text-center pointer"
+          onClick={() => boardProps.listCreated(board.id)}
           style={{
             width: "300px",
             minWidth: "300px",
@@ -486,6 +500,40 @@ export default function BoardPage({ match }) {
               });
             });
           }}
+          listCreated={boardId => {
+            api.createList(boardId, {
+              name: t("name.newList"),
+              position: 0,
+            }).then(list => {
+              const lists = [...localState.lists];
+
+              for (const l of lists) {
+                l.position++;
+              }
+
+              setLocalState({
+                ...localState,
+                lists: lists.concat([list])
+              });
+            });
+          }}
+          cardCreated={(boardId, listId) => {
+            api.createCard(boardId, listId {
+              name: t("name.newCard"),
+              position: 0,
+            }).then(card => {
+              const cards = [...localState.cards];
+
+              for (const c of cards) {
+                c.position++;
+              }
+
+              setLocalState({
+                ...localState,
+                cards: cards.concat([card])
+              });
+            });
+          }}
           cardRemoved={card => {
             api.deleteCard(card.list.boardId, card.listId, card.id)
               .then(() => {
@@ -494,17 +542,6 @@ export default function BoardPage({ match }) {
                   cards: localState.cards.filter(c => c.id != card.id)
                 });
               });
-          }}
-          labelRemoved={label => {
-            api.deleteLabel(label.boardId, label.id).then(() => {
-              setLocalState({
-                ...localState,
-                board: {
-                  ...localState.board,
-                  labels: localState.board.labels.filter(l => l.id != label.id)
-                }
-              });
-            });
           }}/>
       </DndProvider>
     );

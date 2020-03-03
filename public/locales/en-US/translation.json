@@ -72,6 +72,10 @@
     "empty": "Nothing here",
     "error": "Oopsie.. an error occurred :/"
   },
+  "name": {
+    "newCard": "New card",
+    "newList": "New list"
+  },
   "pageTitle": {
     "newBoard": "New board - {{name}}",
     "newTeam": "New team - {{name}}"
