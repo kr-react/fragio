@@ -58,7 +58,9 @@
     "createTeam": "Create a new team",
     "createBoard": "Create a new board",
     "createLabel": "Create a new label",
-    "addMember": "Add a new member"
+    "addMember": "Add a new member",
+    "moveLeft": "Move left",
+    "moveRight": "Move right"
   },
   "desc": {
     "createTeam": "Create and use a team to share your work on private way.",

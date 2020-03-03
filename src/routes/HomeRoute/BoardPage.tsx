@@ -21,6 +21,40 @@ import {
   Activity,
 } from "~/src/common";
 
+interface IconProps {
+  name: string;
+  fill: string;
+  width: React.ReactText;
+  height: React.ReactText;
+}
+
+function Icon(props: IconProps) {
+  function HamburgerIcon() {
+    return (
+      <svg
+        viewBox={`0 0 515.555 515.555`}
+        fill={props.fill}
+        width={props.width}
+        height={props.height}>
+        <path d="m303.347 18.875c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+        <path d="m303.347 212.209c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+        <path d="m303.347 405.541c25.167 25.167 25.167 65.971 0 91.138s-65.971 25.167-91.138 0-25.167-65.971 0-91.138c25.166-25.167 65.97-25.167 91.138 0"/>
+      </svg>
+    );
+  }
+
+  switch (props.name) {
+    case "menu": {
+      return <HamburgerIcon/>;
+    };
+
+    default: {
+      return <svg></svg>;
+    };
+  }
+}
+
+
 interface BoardComponentProps {
   className?: string;
   as?: JSX.Element | string;
@@ -33,8 +67,8 @@ interface BoardComponentProps {
   cardChanged: (card: Card, props: any) => void;
   listCreated: (boardId: string) => void;
   cardCreated: (boardId: string, listId: string) => void;
-  listRemoved: (list: List) => void;
-  cardRemoved: (card: Card) => void;
+  listDeleted: (list: List) => void;
+  cardDeleted: (card: Card) => void;
 }
 
 function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
@@ -68,19 +102,15 @@ function BoardComponent(boardProps: BoardComponentProps) {
     drop: (item, monitor) => {
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#board-${board.id}`);
+      const children = elem.querySelector(".card");
 
       if (boardProps.listChanged) {
         boardProps.listChanged({...item.list}, {
-          position: getPositionFromPoint(x, y, elem.children)
+          position: getPositionFromPoint(x, y, children)
         });
       }
     }
   });
-
-  function removeCard(cardId: string) {
-    const card = cards.find(card => card.id == cardId);
-    boardProps.cardRemoved({...card});
-  }
 
   function removeLabel(cardId: string, labelId: string) {
     const card = cards.find(card => card.id == cardId);
@@ -183,18 +213,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
         </div>
         <div className="modal-footer">
           <button
-            className="btn btn-primary btn-sm"
-            onClick={() => {
-              modal();
-              removeCard(card.id);
-            }}>
-            {t("action.save")}
-          </button>
-          <button
             className="btn btn-danger btn-sm"
             onClick={() => {
               modal();
-              removeCard(card.id);
+              boardProps.cardDeleted(card);
             }}>
             {t("action.remove")}
           </button>
@@ -263,9 +285,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
       drop: (item, monitor) => {
         const { x, y } = monitor.getClientOffset();
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
+        const children = elem.querySelector(".card");
 
         boardProps.cardChanged({...item.card}, {
-          position: getPositionFromPoint(x, y, elem.children),
+          position: getPositionFromPoint(x, y, children),
           listId: list.id
         });
       }
@@ -283,11 +306,53 @@ function BoardComponent(boardProps: BoardComponentProps) {
         minWidth: "300px",
         display,
       }}>
-        <div className="card-header d-flex flex-row justify-content-between align-items-center">
+        <div className="card-header d-flex flex-row justify-content-between align-items-center px-2">
           <b>{list.name}</b>
-          <span className="badge badge-secondary">
+          <span className="badge badge-secondary ml-auto mr-2">
             {cards.length}
           </span>
+          <div className="dropdown">
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0"
+              id="list-menu-button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false">
+              <Icon
+                name="menu"
+                width="1rem"
+                height="1rem"/>
+            </button>
+            <div
+              className="dropdown-menu"
+              aria-labelledby="list-menu-button">
+              <span
+                className="dropdown-item pointer"
+                onClick={() => {
+                  boardProps.listChanged({...list}, {
+                    position: Math.max(list.position - 1, 0)
+                  });
+                }}>
+                {t("action.moveLeft")}
+              </span>
+              <span
+                className="dropdown-item pointer"
+                onClick={() => {
+                  boardProps.listChanged({...list}, {
+                    position: Math.min(list.position + 1, lists.length - 1)
+                  });
+                }}>
+                {t("action.moveRight")}
+              </span>
+              <div class="dropdown-divider"></div>
+              <span
+                className="dropdown-item pointer"
+                onClick={() => boardProps.listDeleted(list)}>
+                {t("action.delete")}
+              </span>
+            </div>
+          </div>
         </div>
         <div
           ref={listDropRef}
@@ -534,7 +599,16 @@ export default function BoardPage({ match }) {
               });
             });
           }}
-          cardRemoved={card => {
+          listDeleted={list => {
+            api.deleteList(list.boardId, list.id)
+              .then(() => {
+                setLocalState({
+                  ...localState,
+                  lists: localState.lists.filter(l => l.id != list.id)
+                });
+              });
+          }}
+          cardDeleted={card => {
             api.deleteCard(card.list.boardId, card.listId, card.id)
               .then(() => {
                 setLocalState({
