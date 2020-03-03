@@ -102,7 +102,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
     drop: (item, monitor) => {
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#board-${board.id}`);
-      const children = elem.querySelector(".card");
+      const children = elem.querySelector(".card") || [];
 
       if (boardProps.listChanged) {
         boardProps.listChanged({...item.list}, {
@@ -285,7 +285,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
       drop: (item, monitor) => {
         const { x, y } = monitor.getClientOffset();
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
-        const children = elem.querySelector(".card");
+        const children = elem.querySelector(".card") || [];
 
         boardProps.cardChanged({...item.card}, {
           position: getPositionFromPoint(x, y, children),
