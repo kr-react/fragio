@@ -19,25 +19,36 @@ import LoginRoute from "./routes/LoginRoute/";
 
 // Redux Reducers
 function appReducer(state: ApplicationState = new ApplicationState, action: ReduxAction) {
-  if (action.type == "LOGIN") {
-    if (action.data.storage == "local") {
-      localStorage.setItem("token", action.data.token);
-    } else {
-      sessionStorage.setItem("token", action.data.token);
-    }
+  switch (action.type) {
+    case "LOGIN": {
+      if (action.data.storage == "local") {
+        localStorage.setItem("token", action.data.token);
+      } else {
+        sessionStorage.setItem("token", action.data.token);
+      }
 
-    return {
-      ...state,
-      token: action.data.token,
-      user: action.data.user
+      return {
+        ...state,
+        token: action.data.token,
+        user: action.data.user
+      };
+    } break;
+
+    case "LOGOUT": {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      return {
+        ...state,
+        token: null,
+        user: null
+      };
     };
-  } else if (action.type == "LOGOUT") {
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-    return {
-      ...state,
-      token: null,
-      user: null
+
+    case "UPDATE_USER": {
+      return {
+        ...state,
+        user: action.data.user
+      }
     };
   }
 

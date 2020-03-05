@@ -333,12 +333,14 @@ export function ActivityComponent(props: ActivityComponentProps) {
     element = (
       <div className="card shadow-sm">
         <div className="card-header p-2">
-          <img
-            className="rounded mr-2"
-            width="30px"
-            height="30px"
-            alt={activity.user.name}
-            src={activity.user.imageUrl}/>
+          <Link to={`/user/${activity.user.username}`}>
+            <img
+              className="rounded mr-2"
+              src={activity.user.imageUrl}
+              alt={activity.user.name}
+              width="30"
+              height="30"/>
+          </Link>
           <span>{activity.user.name}</span>
         </div>
         <div className="card-body text-muted px-2 py-1"
@@ -346,7 +348,9 @@ export function ActivityComponent(props: ActivityComponentProps) {
           {getBody()}
         </div>
         <div className="card-footer text-muted p-2">
-          <span>{activity.board.team.name}</span>
+          {activity.board.team &&
+            <span>{activity.board.team.name}</span>
+          }
           <span className="float-right">
             {moment(activity.createdAt).fromNow()}
           </span>

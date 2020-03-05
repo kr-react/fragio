@@ -157,7 +157,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 {t("action.new")}
               </button>
               <div
-                className="dropdown-menu"
+                className="dropdown-menu shadow-sm"
                 aria-labelledby="labels-dropdown">
                 {getUnusedLabels(card.id).map(label =>
                   <span

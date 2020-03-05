@@ -54,11 +54,14 @@ export default function HomeRoute({ match }) {
             </div>
             <div
               className="dropdown-menu shadow-sm"
-              aria-labelledby="userctl-dropdown-toggle">
+              aria-labelledby="userctl-dropdown-toggle"
+              style={{
+                zIndex: 2000
+              }}>
               <Link
                 className="dropdown-item"
                 to={`/user/${user.username}`}>
-                {t("perfil")}
+                {t("profile")}
               </Link>
               <div class="dropdown-divider"></div>
               <span

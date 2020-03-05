@@ -1,5 +1,5 @@
 export interface ReduxAction {
-  type: "LOGIN" | "LOGOUT" | "VIEWMODE_CHANGE";
+  type: "LOGIN" | "LOGOUT" | "UPDATE_USER";
   data: any;
 }
 
@@ -228,6 +228,14 @@ export class FragioAPI {
   async getActivitiesFromUser(username: string) : Promise<Activity[]> {
     return this.request(`api/v1/user/${username}/activities`, {
       useToken: true
+    });
+  }
+
+  async updateUser(username: string, body: any) : Promise<User> {
+    return this.request(`api/v1/user/${username}`, {
+      method: "PATCH",
+      useToken: true,
+      body,
     });
   }
 
