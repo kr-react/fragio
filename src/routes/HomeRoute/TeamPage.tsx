@@ -376,7 +376,7 @@ export default function TeamPage({ match }) {
           <div className="form-group">
             <label
               for="rename-input">
-              {t("desc.teamName")}
+              {t("name")}
             </label>
             <input
               id="rename-input"

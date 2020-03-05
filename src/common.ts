@@ -225,8 +225,8 @@ export class FragioAPI {
     });
   }
 
-  async getActivitiesFromUser(username: string) : Promise<Activity[]> {
-    return this.request(`api/v1/user/${username}/activities`, {
+  async getActivitiesFromUser(username: string, after: number = 0) : Promise<Activity[]> {
+    return this.request(`api/v1/user/${username}/activities?after=${after}`, {
       useToken: true
     });
   }

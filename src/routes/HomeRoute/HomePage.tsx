@@ -165,9 +165,20 @@ export default function HomePage({ match }) {
             <div className="mb-2 d-flex flex-row align-items-center justify-content-between">
               <span>{t("activity")}</span>
               <button
-                className="btn btn-outline-primary btn-sm float-right"
-                onClick={() => refreshActivities()}>
-                {t("action.refresh")}
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => {
+                  const first = localState.activities[0];
+                  const date = new Date(first.createdAt);
+                  api.getActivitiesFromUser(user.username, date.getTime() + 10)
+                    .then(activities => {
+                      setLocalState({
+                        ...localState,
+                        activities: activities.concat(localState.activities)
+                      });
+                    });
+                }}>
+                {t("Refresh")}
               </button>
             </div>
             {localState.activities.map(activity =>

@@ -288,7 +288,7 @@ export default function UserPage({ match }) {
             <small
               id="emailHelp"
               className="form-text text-muted">
-              {t("dest.email")}
+              {t("desc.email")}
             </small>
           </div>
           <button

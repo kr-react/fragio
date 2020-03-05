@@ -4,8 +4,8 @@
   "description": "Open source kanban board",
   "private": true,
   "scripts": {
-    "start": "./server",
-    "build": "npx webpack && go build -ldflags '-s' server.go",
+    "start": "go run server.go",
+    "build": "npx webpack",
     "watch": "npx webpack --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

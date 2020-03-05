@@ -69,12 +69,13 @@
     "createBoard": "Create and use a board to manage work at a personal or organizational level.",
     "publicBoard": "Anyone can see this board. Team members can change.",
     "privateBoard": "Only team members can see and change this board.",
-    "teamName": "Team name",
-    "imageUrl": "Image url",
     "emptyList": "Create or drop a card here",
     "noDescription": "No description",
     "empty": "Nothing here",
-    "error": "Oopsie.. an error occurred :/"
+    "error": "Oopsie.. an error occurred :/",
+    "name": "Your name may appear around Fragio where you contribute or are mentioned.",
+    "username": "Your username is used to access your account and must be unique.",
+    "email": "Your email is used as secondary way to acces you account"
   },
   "tempName": {
     "card": "New card",
