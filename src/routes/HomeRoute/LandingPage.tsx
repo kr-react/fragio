@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, Redirect }  from "react-router-dom";
+import { Redirect }  from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,12 +10,16 @@ import {
 } from "~/src/common";
 
 export default function UserPage({ match }) {
-  const { user, token } = useSelector<ApplicationState>(state => state);
+  const { user } = useSelector<ApplicationState>(state => state);
   const { t } = useTranslation();
 
   if (user) {
     return <Redirect to="/"/>
   }
 
-  return <div>Landing</div>;
+  return (
+    <div className="container-fluid">
+      <Footer/>
+    </div>
+  );
 }

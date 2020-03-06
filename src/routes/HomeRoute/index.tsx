@@ -70,7 +70,7 @@ export default function HomeRoute({ match }) {
             <Link to={`/login?location=${location.href.slice(location.origin.length)}`}>
               <button
                 type="button"
-                className="btn btn-primary btn-sm shadow-sm">
+                className="btn btn-outline-light btn-sm">
                   {t("action.login")}
               </button>
             </Link>

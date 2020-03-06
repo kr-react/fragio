@@ -188,6 +188,7 @@ export default function LoginRoute({ match }) {
             name="password"
             className="form-control form-control-sm"
             required
+            autocomplete="new-password"
             pattern=".{8,100}"
             type="password"/>
         </div>

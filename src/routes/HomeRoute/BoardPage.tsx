@@ -37,16 +37,15 @@ interface BoardComponentProps {
   cardDeleted: (card: Card) => void;
 }
 
-function getPositionFromPoint(x: number, y: number, elems: HTMLElement[]) {
+function getClosestElementIndex(x1: number, y1: number, elems: HTMLElement[]) {
   let pos = 0;
   let dist = Number.MAX_VALUE;
 
   for (let i = 0; i < elems.length; i++) {
     const child = elems[i];
-    const bounding = child.getBoundingClientRect();
-    const x1 = bounding.x;
-    const y1 = bounding.y;
-    const res = Math.floor(Math.sqrt(x - x1) + Math.sqrt(y - y1));
+    const { x:x2, y:y2 } = child.getBoundingClientRect();
+    const res = Math.sqrt(x1 - x1) + Math.sqrt(y1 - y2);
+
     if (res < dist) {
       pos = i;
       dist = res;
@@ -71,12 +70,15 @@ function BoardComponent(boardProps: BoardComponentProps) {
 
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#board-${board.id}`);
-      const children = elem.querySelector(".card") || [];
+      const children = elem.querySelectorAll(":scope > div[draggable='true']") || [];
 
       if (boardProps.listChanged) {
-        boardProps.listChanged({...item.list}, {
-          position: getPositionFromPoint(x, y, children)
-        });
+        const data = {
+          position: getClosestElementIndex(x, y, children)
+        };
+
+        console.log({x, y, elem, children, data});
+        boardProps.listChanged({...item.list}, data);
       }
     }
   });
@@ -196,10 +198,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
 
   function CardComponent(props: {card: Card}) {
     const { card } = props;
-    const [{ display }, cardDragRef] = useDrag({
+    const [{ opacity }, cardDragRef] = useDrag({
       item: { type: "card", card },
       collect: monitor => ({
-        display: monitor.isDragging() ? "none" : undefined,
+        opacity: monitor.isDragging() ? 0.5 : 1.0,
       }),
     });
 
@@ -211,7 +213,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
         ref={cardDragRef}
         className="card shadow-sm mb-2 pointer"
         onClick={() => openModal(card)}
-        style={{display}}>
+        style={{opacity}}>
         {imageUrls.length > 0 &&
           <img
             className="card-img-top"
@@ -240,10 +242,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
 
   function ListComponent(props: {list: List}) {
     const { list } = props;
-    const [{ display }, listDragRef] = useDrag({
+    const [{ opacity }, listDragRef] = useDrag({
       item: { type: "list", list },
       collect: monitor => ({
-        display: monitor.isDragging() ? "none" : undefined,
+        opacity: monitor.isDragging() ? 0.5 : 1.0,
       }),
     });
     const [listDropProps, listDropRef] = useDrop({
@@ -257,10 +259,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
 
         const { x, y } = monitor.getClientOffset();
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
-        const children = elem.querySelector(".card") || [];
+        const children = elem.querySelector(":scope > div[draggable='true']") || [];
 
         boardProps.cardChanged({...item.card}, {
-          position: getPositionFromPoint(x, y, children),
+          position: getClosestElementIndex(x, y, children),
           listId: list.id
         });
       }
@@ -276,7 +278,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
         style={{
         width: "300px",
         minWidth: "300px",
-        display,
+        opacity,
       }}>
         <div className="card-header d-flex flex-row justify-content-between align-items-center px-2">
           <b
