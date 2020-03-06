@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as moment from "moment";
 import * as $ from "jquery";
+import { useTranslation } from 'react-i18next';
 import { Link } from "react-router-dom";
 import { Activity } from "~/src/common";
 
@@ -186,6 +187,7 @@ export function Sticky(props: StickyProps) {
 }
 
 export function ActivityComponent(props: ActivityComponentProps) {
+  const { t } = useTranslation();
   const { activity } = props;
 
   function getBody() {
@@ -195,9 +197,9 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Created board </span>
+            <span>{t("activityBody.createdBoard")}</span>
             <Link to={`/board/${board.id}`}>
-              <b>{board.name}</b>
+              <b> {board.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -208,11 +210,11 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Created list </span>
-            <b>{list.name}</b>
-            <span> to </span>
+            <span>{t("activityBody.createdList")}</span>
+            <b> {list.name}</b>
+            <span> {t("activityBody.on")}</span>
             <Link to={`/board/${list.board.id}`}>
-              <b>{list.board.name}</b>
+              <b> {list.board.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -223,13 +225,13 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Created card </span>
-            <b>{card.name}</b>
-            <span> to </span>
-            <b>{card.list.name}</b>
-            <span> on board </span>
+            <span>{t("activityBody.createdBoard")}</span>
+            <b> {card.name}</b>
+            <span> {t("activityBody.on")}</span>
+            <b> {card.list.name}</b>
+            <span> {t("activityBody.onBoard")}</span>
             <Link to={`/board/${card.list.board.id}`}>
-              <b>{card.list.board.name}</b>
+              <b> {card.list.board.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -240,11 +242,11 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Renamed board </span>
-            <b>{data.oldName}</b>
-            <span> to </span>
+            <span>{t("activityBody.renamedBoard")}</span>
+            <b> {data.oldName}</b>
+            <span> {t("activityBody.to")}</span>
             <Link to={`/board/${board.id}`}>
-              <b>{data.newName}</b>
+              <b> {data.newName}</b>
             </Link>
           </React.Fragment>
         );
@@ -255,13 +257,13 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Renamed list </span>
-            <b>{data.oldName}</b>
-            <span> to </span>
-            <b>{data.newName}</b>
-            <span> on board </span>
+            <span>{t("activityBody.renamedList")}</span>
+            <b> {data.oldName}</b>
+            <span> {t("activityBody.to")}</span>
+            <b> {data.newName}</b>
+            <span> {t("activityBody.onBoard")}</span>
             <Link to={`/board/${list.board.id}`}>
-              <b>{list.board.name}</b>
+              <b> {list.board.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -272,13 +274,13 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Renamed card </span>
-            <b>{data.oldName}</b>
-            <span> to </span>
-            <b>{data.newName}</b>
-            <span> on board </span>
+            <span>{t("activityBody.renamedCard")}</span>
+            <b> {data.oldName}</b>
+            <span> {t("activityBody.to")}</span>
+            <b> {data.newName}</b>
+            <span> {t("activityBody.onBoard")}</span>
             <Link to={`/board/${card.list.board.id}`}>
-              <b>{card.list.board.name}</b>
+              <b> {card.list.board.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -289,20 +291,19 @@ export function ActivityComponent(props: ActivityComponentProps) {
 
         return (
           <React.Fragment>
-            <span>Moved card </span>
-            <b>{card.name}</b>
-            <span> to </span>
-            <b>{card.list.name}</b>
-            <span> on board </span>
+            <span>{t("activityBody.movedCard")}</span>
+            <b> {card.name}</b>
+            <span> {t("activityBody.to")}</span>
+            <b> {card.list.name}</b>
+            <span> {t("activityBody.onBoard")}</span>
             <Link to={`/board/${card.list.board.id}`}>
-              <b>{card.list.board.name}</b>
+              <b> {card.list.board.name}</b>
             </Link>
           </React.Fragment>
         );
       } break;
     }
   }
-
 
   var element: JSX.Element;
 
@@ -369,6 +370,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
 }
 
 export function Footer(props: FooterProps) {
+  const { t } = useTranslation();
   const date = new Date();
 
   return (
@@ -388,7 +390,7 @@ export function Footer(props: FooterProps) {
           <a
             href="https://github.com/happotato/fragio"
             target="blank">
-            Source Code
+            {t("sourceCode")}
           </a>
         </div>
       </div>

@@ -21,6 +21,7 @@
   "security": "Security",
   "public": "Public",
   "private": "Private",
+  "sourceCode": "Source Code",
   "team_plural": "Teams",
   "user_plural": "Users",
   "member_plural": "Members",
@@ -87,14 +88,14 @@
   },
   "activityBody": {
     "to": "to",
+    "on": "on",
     "onBoard": "on board",
-    "addedBoard": "Added board",
-    "addedList": "Added list",
-    "addedCard": "Added card",
-    "movedList": "Moved list",
-    "movedCard": "Moved card",
+    "createdBoard": "Created board",
+    "createdList": "Created list",
+    "createdCard": "Created card",
     "renamedBoard": "Renamed board",
     "renamedList": "Renamed list",
-    "renamedCard": "Renamed card"
+    "renamedCard": "Renamed card",
+    "movedCard": "Moved card"
   }
 }
