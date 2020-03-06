@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Redirect } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { ApplicationState, QueryString, FragioAPI } from "~/src/common";
@@ -27,42 +27,45 @@ export default function LoginRoute({ match }) {
   const qString = new QueryString(location.href);
   const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispatch = useDispatch();
+  const history = useHistory();
   const { t } = useTranslation();
   const [state, setState] = React.useState(0);
 
   React.useEffect(() => {
-    if (token.token)
-      login(token.storage);
+    if (token.token) {
+      login(token.storage).catch(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+    }
   }, []);
 
   async function login(storage) {
-    const user = await api.getCurrentUser();
-
-    if (user) {
-      dispatch({
-        type: "LOGIN",
-        data: {
-          token: api.token,
-          storage,
-          user
-        }
+    return api.getCurrentUser()
+      .then(user => {
+        dispatch({
+          type: "LOGIN",
+          data: {
+            token: api.token,
+            storage,
+            user
+          }
+        });
       });
-    }
   }
 
   function LoginForm() {
     async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
       const data = new FormData(e.currentTarget);
-      const token = await api.getToken(data.get("username"), data.get("password"));
-      const remember = data.get("remember-me") == "remember";
 
-      if (!token)
-        return false;
-
-      if (token) {
-        api.token = token;
+      try {
+        const info = await api.getToken(data.get("username"), data.get("password"));
+        const remember = data.get("remember-me") == "remember";
+        api.token = info.token;
         await login(remember ? "local" : "session");
+      } catch (err) {
+        return false;
       }
     }
 
@@ -77,7 +80,7 @@ export default function LoginRoute({ match }) {
           <input
             id="username"
             name="username"
-            className="form-control"
+            className="form-control form-control-sm"
             autofocus
             autocomplete="username"
             required
@@ -92,7 +95,7 @@ export default function LoginRoute({ match }) {
           <input
             id="password"
             name="password"
-            className="form-control"
+            className="form-control form-control-sm"
             autocomplete="current-password"
             required
             type="password"/>
@@ -110,7 +113,7 @@ export default function LoginRoute({ match }) {
           </label>
         </div>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary btn-sm"
           type="submit">
           {t("action.login")}
         </button>
@@ -122,17 +125,15 @@ export default function LoginRoute({ match }) {
     async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
       const data = new FormData(e.currentTarget);
-      const token = await api.createAccount({
+      const info = await api.createAccount({
         name: data.get("name"),
         username: data.get("username"),
         email: data.get("email"),
         password: data.get("password")
       });
 
-      if (token) {
-        api.token = token;
-        await login("session");
-      }
+      api.token = info.token;
+      await login("session");
     }
 
     return (
@@ -144,7 +145,7 @@ export default function LoginRoute({ match }) {
           <input
             id="name"
             name="name"
-            className="form-control"
+            className="form-control form-control-sm"
             autofocus
             required
             autocomplete="name"
@@ -158,7 +159,7 @@ export default function LoginRoute({ match }) {
           <input
             id="username"
             name="username"
-            className="form-control"
+            className="form-control form-control-sm"
             required
             autocomplete="username"
             maxlength="100"
@@ -171,7 +172,7 @@ export default function LoginRoute({ match }) {
           <input
             id="email"
             name="email"
-            className="form-control"
+            className="form-control form-control-sm"
             required
             autocomplete="email"
             pattern=".+@.+"
@@ -185,13 +186,13 @@ export default function LoginRoute({ match }) {
           <input
             id="password"
             name="password"
-            className="form-control"
+            className="form-control form-control-sm"
             required
             pattern=".{8,100}"
             type="password"/>
         </div>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary btn-sm"
           type="submit">
           {t("action.signIn")}
         </button>
@@ -211,10 +212,10 @@ export default function LoginRoute({ match }) {
       <div className="container h-100">
         <div className="row h-100">
           <div className="col-sm-9 col-md-7 col-lg-5 mx-auto my-auto">
-            <div className="card my-5">
-              <div className="card-body">
+            <div className="card bg-light my-5">
+              <div className="card-body px-0">
                 <h5 className="card-title text-center">{process.env.APP_NAME}</h5>
-                <ul className="nav nav-tabs mb-3">
+                <ul className="nav nav-tabs px-2">
                   {[t("action.login"), t("action.signIn")].map((tab, i) =>
                     <li
                       className={`nav-item pointer`}
@@ -227,12 +228,14 @@ export default function LoginRoute({ match }) {
                     </li>
                   )}
                 </ul>
-                {state === 0 &&
-                  <LoginForm/>
-                }
-                {state === 1 &&
-                  <SignUpForm/>
-                }
+                <div className="p-3 bg-white border-bottom">
+                  {state === 0 &&
+                    <LoginForm/>
+                  }
+                  {state === 1 &&
+                    <SignUpForm/>
+                  }
+                </div>
               </div>
             </div>
           </div>

@@ -31,26 +31,30 @@ export default function HomePage({ match }) {
 
   React.useEffect(() => {
     async function request() {
-      const boards = await api.getBoardsFromUser(user.username);
-      const teams = await api.getTeamsFromUser(user.username);
-      const history = await api.getHistoryFromUser(user.username);
-      const activities = await api.getActivitiesFromUser(user.username);
+      try {
+        const boards = await api.getBoardsFromUser(user.username);
+        const teams = await api.getTeamsFromUser(user.username);
+        const history = await api.getHistoryFromUser(user.username);
+        const activities = await api.getActivitiesFromUser(user.username);
 
-      if (boards && teams && history && activities) {
         setLocalState({
           boards,
           teams,
           history,
           activities
         });
-      } else {
+      } catch (err) {
         setLocalState(null);
       }
     }
 
     request();
     document.title = `Home - ${process.env.APP_NAME}`;
-  }, []);
+  }, [match]);
+
+  if (!user) {
+    return <Redirect to="/landing"/>
+  }
 
   function createBoard(name: string) {
     api.createBoard({
@@ -74,10 +78,6 @@ export default function HomePage({ match }) {
     });
   }
 
-  function refreshActivities() {
-    // TODO: Query new activities
-  }
-
   function getLastTimeOpen(boardId: string) {
     const h = localState.history.find(h => h.boardId == boardId);
     return h ? new Date(h.createdAt).toLocaleString() : "Never";
@@ -86,7 +86,6 @@ export default function HomePage({ match }) {
   function includesIgnoreCase(str1: string, str2: string) {
     return str1.toUpperCase().includes(str2.toUpperCase());
   }
-
 
   if (localState === undefined) {
     return (

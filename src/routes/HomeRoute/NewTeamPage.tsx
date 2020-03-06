@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   ApplicationState,
@@ -15,6 +15,10 @@ export default function NewBoardPage({ match }) {
   const api = new FragioAPI(process.env.API_URL, token);
   const history = useHistory();
   const { t } = useTranslation();
+
+  if (!user) {
+    return <Redirect to="/landing"/>
+  }
 
   function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

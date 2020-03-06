@@ -66,6 +66,9 @@ function BoardComponent(boardProps: BoardComponentProps) {
       arePropsEqual: (a, b) => a.list.id == b.list.id,
     },
     drop: (item, monitor) => {
+      if (!boardProps.editable)
+        return;
+
       const { x, y } = monitor.getClientOffset();
       const elem = document.querySelector(`#board-${board.id}`);
       const children = elem.querySelector(".card") || [];
@@ -249,6 +252,9 @@ function BoardComponent(boardProps: BoardComponentProps) {
         arePropsEqual: (a, b) => a.card.id == b.card.id,
       },
       drop: (item, monitor) => {
+        if (!boardProps.editable)
+          return;
+
         const { x, y } = monitor.getClientOffset();
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
         const children = elem.querySelector(".card") || [];
@@ -273,12 +279,8 @@ function BoardComponent(boardProps: BoardComponentProps) {
         display,
       }}>
         <div className="card-header d-flex flex-row justify-content-between align-items-center px-2">
-          <span className="badge badge-secondary">
-            {cards.length}
-          </span>
           <b
-            className="mx-2"
-            contentEditable={true}
+            contentEditable={boardProps.editable}
             onBlur={e => {
               const name = e.currentTarget.innerHTML;
 
@@ -291,58 +293,65 @@ function BoardComponent(boardProps: BoardComponentProps) {
             }}>
             {list.name}
           </b>
-          <div className="dropdown">
-            <button
-              type="button"
-              className="btn btn-link btn-sm p-0"
-              id="list-menu-button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false">
-              <Icon
-                name="menu"
-                width="16"
-                height="16"/>
-            </button>
-            <div
-              className="dropdown-menu shadow-sm"
-              aria-labelledby="list-menu-button">
-              <span
-                className="dropdown-item pointer"
-                onClick={() => {
-                  boardProps.listChanged({...list}, {
-                    position: Math.max(list.position - 1, 0)
-                  });
-                }}>
-                {t("action.moveLeft")}
-              </span>
-              <span
-                className="dropdown-item pointer"
-                onClick={() => {
-                  boardProps.listChanged({...list}, {
-                    position: Math.min(list.position + 1, lists.length - 1)
-                  });
-                }}>
-                {t("action.moveRight")}
-              </span>
-              <div class="dropdown-divider"></div>
-              <span
-                className="dropdown-item pointer"
-                onClick={() => boardProps.listDeleted(list)}>
-                {t("action.delete")}
-              </span>
+          <span className="badge badge-secondary ml-auto">
+            {cards.length}
+          </span>
+          {boardProps.editable &&
+            <div className="dropdown ml-2">
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0"
+                id="list-menu-button"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false">
+                <Icon
+                  name="menu"
+                  width="16"
+                  height="16"/>
+              </button>
+              <div
+                className="dropdown-menu shadow-sm"
+                aria-labelledby="list-menu-button">
+                <span
+                  className="dropdown-item pointer"
+                  onClick={() => {
+                    boardProps.listChanged({...list}, {
+                      position: Math.max(list.position - 1, 0)
+                    });
+                  }}>
+                  {t("action.moveLeft")}
+                </span>
+                <span
+                  className="dropdown-item pointer"
+                  onClick={() => {
+                    boardProps.listChanged({...list}, {
+                      position: Math.min(list.position + 1, lists.length - 1)
+                    });
+                  }}>
+                  {t("action.moveRight")}
+                </span>
+                <div class="dropdown-divider"></div>
+                <span
+                  className="dropdown-item pointer"
+                  onClick={() => boardProps.listDeleted(list)}>
+                  {t("action.delete")}
+                </span>
+              </div>
             </div>
-          </div>
+          }
         </div>
         <div
           ref={listDropRef}
           className="card-body overflow-auto pt-2 pl-2 pr-2 pb-0 bg-light">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm shadow-sm w-100 mb-2"
-            onClick={() => boardProps.cardCreated(board.id, list.id)}>
-            {t("action.create")}
-          </button>
+          {boardProps.editable &&
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm shadow-sm w-100 mb-2"
+              onClick={() => boardProps.cardCreated(board.id, list.id)}>
+              {t("action.create")}
+            </button>
+          }
           {cards.map(card =>
             <CardComponent card={card}/>
           )}
@@ -413,13 +422,13 @@ export default function BoardPage({ match }) {
 
   React.useEffect(() => {
     async function request() {
-      const board = await api.getBoard(match.params.id);
-      const lists = await api.getLists(match.params.id);
-      const cards = await api.getCards(match.params.id);
-      const teams = await api.getTeamsFromUser(user.username);
-      const activities = await api.getBoardActivities(match.params.id);
+      try {
+        const board = await api.getBoard(match.params.id);
+        const lists = await api.getLists(match.params.id);
+        const cards = await api.getCards(match.params.id);
+        const teams = user ? await api.getTeamsFromUser(user.username) : [];
+        const activities = await api.getBoardActivities(match.params.id);
 
-      if (board && lists && cards && teams && activities) {
         setLocalState({
           board,
           lists,
@@ -428,21 +437,21 @@ export default function BoardPage({ match }) {
           activities,
           selectedTab: 0,
         });
-
-        document.title = `${board.name} - ${process.env.APP_NAME}`
-      } else {
+      } catch (err) {
         setLocalState(null);
       }
     }
 
     request();
-  }, []);
+  }, [match, user]);
 
   function canEdit(u: User) {
     const { board, teams } = localState;
 
-    return (board.team && teams.some(team => team.id == board.team.id))
-      || u.id == board.ownerId;
+    if (u && u.id == board.ownerId)
+      return true;
+
+    return board.team && teams.some(team => team.id == board.team.id);
   }
 
   function isOwner(u: User) {
@@ -755,11 +764,13 @@ export default function BoardPage({ match }) {
               aria-label="Search"
               onChange={e => search(e.currentTarget.value.toLowerCase())}/>
           </div>
-          <button
-            className="btn btn-outline-primary btn-sm ml-2"
-            onClick={() => modal(() => <LabelModal/>)}>
-            {t("action.new")}
-          </button>
+          {canEdit(user) &&
+            <button
+              className="btn btn-outline-primary btn-sm ml-2"
+              onClick={() => modal(() => <LabelModal/>)}>
+              {t("action.new")}
+            </button>
+          }
         </div>
         <ul className="list-group list-group-flush">
           {labels.map(label =>
@@ -774,22 +785,24 @@ export default function BoardPage({ match }) {
               <span className="mr-auto">
                 {label.name}
               </span>
-              <button
-                className="btn btn-outline-danger btn-sm"
-                onClick={e => {
-                  api.deleteLabel(localState.board.id, label.id)
-                    .then(() => {
-                      setLocalState({
-                        ...localState,
-                        board: {
-                          ...localState.board,
-                          labels: labels.filter(l => l.id != label.id)
-                        },
+              {canEdit(user) &&
+                <button
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={e => {
+                    api.deleteLabel(localState.board.id, label.id)
+                      .then(() => {
+                        setLocalState({
+                          ...localState,
+                          board: {
+                            ...localState.board,
+                            labels: labels.filter(l => l.id != label.id)
+                          },
+                        });
                       });
-                    });
-                }}>
-                {t("action.remove")}
-              </button>
+                  }}>
+                  {t("action.remove")}
+                </button>
+              }
             </div>
           )}
         </ul>
@@ -827,7 +840,7 @@ export default function BoardPage({ match }) {
           <div className="form-group">
             <label
               for="rename-input">
-              {t("desc.teamName")}
+              {t("name")}
             </label>
             <input
               id="rename-input"
@@ -895,10 +908,14 @@ export default function BoardPage({ match }) {
     );
   }
 
-  if (localState === null) {
-    return <div>Not Found</div>;
-  } else if (localState === undefined) {
-    return <div>Loading</div>;
+  if (localState === undefined) {
+    return (
+      <span>Loading</span>
+    );
+  } else if (localState === null) {
+    return (
+      <span>Error</span>
+    );
   }
 
   return (

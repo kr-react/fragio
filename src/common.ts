@@ -160,39 +160,35 @@ export class FragioAPI {
     this.token = token;
   }
 
-  async request<T>(endpoint: string, options: ApiRequestOptions = new ApiRequestOptions, resolve: (data: any) => T = (e) => e as T) : Promise<T> {
-    const res = await fetch(`${this.url}/${endpoint}`, {
+  async request<T>(endpoint: string, options: ApiRequestOptions = new ApiRequestOptions) : Promise<T> {
+    return fetch(`${this.url}/${endpoint}`, {
       method: options.method,
       headers: {
         "Authorization": options.useToken && this.token ? `Bearer ${this.token}` : undefined,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(options.body)
+    }).then(res => {
+      if (res.ok) {
+        return res.json();
+      }
+
+      return Promise.reject([res.status, res.statusText]);
     });
-
-    const contentType = res.headers.get("Content-Type");
-
-    if (!res.ok) return Promise.reject([res.statusCode, res.statusText]);
-    if (contentType && contentType.includes("application/json"))
-    {
-      return resolve(await res.json());
-    }
-
-    return Promise.resolve(null);
   }
 
   async createAccount(data: any) : Promise<string> {
     return this.request("api/v1/auth/new", {
       method: "POST",
       body: data
-    }, data => data.token);
+    });
   }
 
   async getToken(username: string, password: string) : Promise<string> {
     return this.request("api/v1/auth/auth", {
       method: "POST",
       body: {username, password}
-    }, data => data.token);
+    });
   }
 
   async getCurrentUser() : Promise<User> {

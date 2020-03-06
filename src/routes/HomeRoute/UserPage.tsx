@@ -30,12 +30,12 @@ export default function UserPage({ match }) {
 
   React.useEffect(() => {
     async function request() {
-      const user = await api.getUser(match.params.username);
-      const boards = await api.getBoardsFromUser(match.params.username);
-      const teams = await api.getTeamsFromUser(match.params.username);
-      const activities = await api.getActivitiesFromUser(match.params.username);
+      try {
+        const user = await api.getUser(match.params.username);
+        const boards = await api.getBoardsFromUser(match.params.username);
+        const teams = await api.getTeamsFromUser(match.params.username);
+        const activities = await api.getActivitiesFromUser(match.params.username);
 
-      if (user && boards && teams && activities) {
         setLocalState({
           user,
           boards,
@@ -43,6 +43,8 @@ export default function UserPage({ match }) {
           activities,
           selectedTab: 0,
         });
+      } catch (err) {
+        setLocalState(null);
       }
     }
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   ApplicationState,
@@ -19,23 +19,28 @@ export default function NewBoardPage({ match }) {
     teams: Team[],
   }>(undefined);
 
+  if (!user) {
+    return <Redirect to="/landing"/>
+  }
+
   React.useEffect(() => {
     async function request() {
-      const teams = await api.getTeamsFromUser(user.username);
+      try {
+        const teams = await api.getTeamsFromUser(user.username);
 
-      if (teams) {
+        document.title = t("pageTitle.newBoard", {name: process.env.APP_NAME});
+
         setLocalState({
           teams,
         });
 
-        document.title = t("pageTitle.newBoard", {name: process.env.APP_NAME});
-      } else {
+      } catch(err) {
         setLocalState(null);
       }
     }
 
     request();
-  }, []);
+  }, [match]);
 
   function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

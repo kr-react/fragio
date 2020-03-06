@@ -1,10 +1,10 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import * as moment from "moment";
 import i18n from "i18next";
 import Backend from 'i18next-xhr-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
-import { render } from "react-dom";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { createStore, Store } from "redux";
@@ -37,6 +37,7 @@ function appReducer(state: ApplicationState = new ApplicationState, action: Redu
     case "LOGOUT": {
       window.localStorage.clear();
       window.sessionStorage.clear();
+
       return {
         ...state,
         token: null,
@@ -56,7 +57,7 @@ function appReducer(state: ApplicationState = new ApplicationState, action: Redu
 }
 
 function update(store: Store<ApplicationState, ReduxAction>) {
-  render(
+  ReactDOM.render(
     <React.Suspense fallback="Loading">
       <Provider store={store}>
         <BrowserRouter>
@@ -67,6 +68,7 @@ function update(store: Store<ApplicationState, ReduxAction>) {
             <Route exact path="/user/:username" component={HomeRoute}/>
             <Route exact path="/newboard" component={HomeRoute}/>
             <Route exact path="/newteam" component={HomeRoute}/>
+            <Route exact path="/landing" component={HomeRoute}/>
             <Route exact path="/login" component={LoginRoute}/>
           </Switch>
         </BrowserRouter>

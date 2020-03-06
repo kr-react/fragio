@@ -36,12 +36,14 @@ export default function TeamPage({ match }) {
 
   React.useEffect(() => {
     async function request() {
-      const team = await api.getTeam(match.params.id);
-      const members = await api.getTeamMembers(match.params.id);
-      const boards = await api.getTeamBoards(match.params.id);
-      const activities = await api.getTeamActivities(match.params.id);
+      try {
+        const team = await api.getTeam(match.params.id);
+        const members = await api.getTeamMembers(match.params.id);
+        const boards = await api.getTeamBoards(match.params.id);
+        const activities = await api.getTeamActivities(match.params.id);
 
-      if (team && members && boards && activities) {
+        document.title = `${team.name} - ${process.env.APP_NAME}`;
+
         setLocalState({
           team,
           members,
@@ -49,8 +51,7 @@ export default function TeamPage({ match }) {
           activities,
           selectedTab: 0
         });
-        document.title = `${team.name} - ${process.env.APP_NAME}`;
-      } else {
+      } catch (err) {
         setLocalState(null);
       }
     }
@@ -135,6 +136,17 @@ export default function TeamPage({ match }) {
 
   function BoardsTab() {
     const [search, boards] = useSearch(localState.boards, a => a.name);
+    const [userBoards, setUserBoards] = React.useState([]);
+
+    React.useEffect(() => {
+      if (!user)
+        return;
+
+      api.getBoardsFromUser(user.username)
+        .then(boards => {
+          setUserBoards(boards.filter(board => !board.teamId));
+        });
+    }, []);
 
     return (
       <React.Fragment>
@@ -152,70 +164,45 @@ export default function TeamPage({ match }) {
                 aria-label="Search"
                 onChange={e => search(e.currentTarget.value)}/>
             </div>
-            <div className="dropdown">
-              <button
-                className="btn btn-outline-primary btn-sm dropdown-toggle ml-2"
-                id="boards-dropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false">
-                {t("action.add")}
-              </button>
-              <div
-                className="dropdown-menu shadow-sm"
-                aria-labelledby="boards-dropdown">
-                <AsyncComponent
-                  func={api.getBoardsFromUser}
-                  args={[api, user.username]}
-                  ok={value => {
-                    const available = value.filter(board => !board.teamId);
-
-                    return (
-                      <React.Fragment>
-                        {available.map(board =>
-                          <span
-                            className="dropdown-item pointer"
-                            onClick={() => {
-                              api.updateBoard(board.id, {
-                                teamId: localState.team.id,
-                              }).then(board => {
-                                setLocalState({
-                                  ...localState,
-                                  boards: localState.boards.concat([board]),
-                                });
-                              });
-                            }}>
-                            {board.name}
-                          </span>
-                        )}
-                        {available.length == 0 &&
-                          <div className="text-center text-muted">
-                            <small>
-                              {t("desc.empty")}
-                            </small>
-                          </div>
-                        }
-                      </React.Fragment>
-                    );
-                  }}
-                  loading={() =>
-                    <div className="text-center">
-                      <div
-                        className="spinner-border spinner-border-sm text-secondary"
-                        role="status">
-                        <span className="sr-only">Loading...</span>
-                      </div>
-                    </div>
-                  }
-                  fail={reason =>
+            {isOwner(user) &&
+              <div className="dropdown">
+                <button
+                  className="btn btn-outline-primary btn-sm dropdown-toggle ml-2"
+                  id="boards-dropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false">
+                  {t("action.add")}
+                </button>
+                <div
+                  className="dropdown-menu shadow-sm"
+                  aria-labelledby="boards-dropdown">
+                  {userBoards.map(board =>
+                    <span
+                      className="dropdown-item pointer"
+                      onClick={() => {
+                        api.updateBoard(board.id, {
+                          teamId: localState.team.id,
+                        }).then(board => {
+                          setLocalState({
+                            ...localState,
+                            boards: localState.boards.concat([board]),
+                          });
+                        });
+                      }}>
+                      {board.name}
+                    </span>
+                  )}
+                  {userBoards.length == 0 &&
                     <div className="text-center text-muted">
                       <small>
-                        {t("desc.error")}
+                        {t("desc.empty")}
                       </small>
                     </div>
-                  }/>
+                  }
+                </div>
               </div>
-            </div>
+            }
           </div>
           <ul className="list-group list-group-flush">
             {boards.map(board =>
@@ -305,11 +292,13 @@ export default function TeamPage({ match }) {
                 aria-label="Search"
                 onChange={e => search(e.currentTarget.value)}/>
             </div>
-            <button
-              className="btn btn-outline-primary btn-sm ml-2"
-              onClick={() => modal(() => <MembersModal/>)}>
-              {t("action.add")}
-            </button>
+            {isOwner(user) &&
+              <button
+                className="btn btn-outline-primary btn-sm ml-2"
+                onClick={() => modal(() => <MembersModal/>)}>
+                {t("action.add")}
+              </button>
+            }
           </div>
           <ul className="list-group list-group-flush">
             {members.map(member =>
