@@ -170,7 +170,11 @@ export class FragioAPI {
       body: JSON.stringify(options.body)
     }).then(res => {
       if (res.ok) {
-        return res.json();
+        if (res.headers.has("Content-Type")) {
+          return res.json();
+        }
+
+        return Promise.resolve(null);
       }
 
       return Promise.reject([res.status, res.statusText]);
