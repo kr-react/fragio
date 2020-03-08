@@ -212,10 +212,6 @@ export function ActivityComponent(props: ActivityComponentProps) {
           <React.Fragment>
             <span>{t("activityBody.createdList")}</span>
             <b> {list.name}</b>
-            <span> {t("activityBody.on")}</span>
-            <Link to={`/board/${list.board.id}`}>
-              <b> {list.board.name}</b>
-            </Link>
           </React.Fragment>
         );
       } break;
@@ -229,10 +225,6 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <b> {card.name}</b>
             <span> {t("activityBody.on")}</span>
             <b> {card.list.name}</b>
-            <span> {t("activityBody.onBoard")}</span>
-            <Link to={`/board/${card.list.board.id}`}>
-              <b> {card.list.board.name}</b>
-            </Link>
           </React.Fragment>
         );
       } break;
@@ -261,10 +253,6 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <b> {data.oldName}</b>
             <span> {t("activityBody.to")}</span>
             <b> {data.newName}</b>
-            <span> {t("activityBody.onBoard")}</span>
-            <Link to={`/board/${list.board.id}`}>
-              <b> {list.board.name}</b>
-            </Link>
           </React.Fragment>
         );
       } break;
@@ -278,10 +266,6 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <b> {data.oldName}</b>
             <span> {t("activityBody.to")}</span>
             <b> {data.newName}</b>
-            <span> {t("activityBody.onBoard")}</span>
-            <Link to={`/board/${card.list.board.id}`}>
-              <b> {card.list.board.name}</b>
-            </Link>
           </React.Fragment>
         );
       } break;
@@ -295,10 +279,6 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <b> {card.name}</b>
             <span> {t("activityBody.to")}</span>
             <b> {card.list.name}</b>
-            <span> {t("activityBody.onBoard")}</span>
-            <Link to={`/board/${card.list.board.id}`}>
-              <b> {card.list.board.name}</b>
-            </Link>
           </React.Fragment>
         );
       } break;
@@ -332,35 +312,47 @@ export function ActivityComponent(props: ActivityComponentProps) {
     );
   } else {
     element = (
-      <div className="card shadow-sm">
-        <div className="card-header p-2">
-          <Link to={`/user/${activity.user.username}`}>
-            <img
-              className="rounded mr-2"
-              src={activity.user.imageUrl}
-              alt={activity.user.name}
-              width="30"
-              height="30"/>
+      <div className="d-flex flex-column">
+        <div className="mb-2 text-muted">
+          <span><b>{activity.user.username}</b></span>
+          <span> { t("activityBody.on")} </span>
+          <Link to={`board/${activity.board.id}`}>
+            <b>{activity.board.name}</b>
           </Link>
-          <span>{activity.user.name}</span>
-        </div>
-        <div className="card-body text-muted px-2 py-1"
-          style={{fontSize: ".9em"}}>
-          {getBody()}
-        </div>
-        <div className="card-footer text-muted p-2">
           {activity.board.team &&
-            <span>{activity.board.team.name}</span>
+            <small className="ml-2">
+              {activity.board.team.name}
+            </small>
           }
-          <span className="float-right">
+          <small className="ml-2">
             {moment(activity.createdAt).fromNow()}
-          </span>
+          </small>
+        </div>
+        <div className="d-flex flex-row">
+          <div>
+            <Link to={`/user/${activity.user.username}`}>
+              <img
+                className="rounded border"
+                src={activity.user.imageUrl}
+                alt={activity.user.name}
+                width="35"
+                height="35"/>
+            </Link>
+          </div>
+          <div className="card bg-light ml-2 flex-grow-1">
+            <div className="card-body text-muted">
+              {getBody()}
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  element.props.className += " " + props.className;
+  if (props.className) {
+    element.props.className += " " + props.className;
+  }
+
 
   if (props.as) {
     element.type = props.as;

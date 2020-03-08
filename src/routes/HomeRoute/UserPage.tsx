@@ -71,9 +71,10 @@ export default function UserPage({ match }) {
       <React.Fragment>
         <div className="d-flex flex-column pt-3 px-3">
           {localState.activities.map(activity =>
-            <div className="mb-3">
+            <React.Fragment>
               <ActivityComponent activity={activity}/>
-            </div>
+              <hr className="w-100"/>
+            </React.Fragment>
           )}
         </div>
         {localState.activities.length == 0 &&

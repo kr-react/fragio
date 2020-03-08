@@ -181,9 +181,10 @@ export default function HomePage({ match }) {
               </button>
             </div>
             {localState.activities.map(activity =>
-              <div className="mb-3">
+              <React.Fragment>
                 <ActivityComponent activity={activity}/>
-              </div>
+                <hr className="w-100"/>
+              </React.Fragment>
             )}
           </main>
           <Sticky>
