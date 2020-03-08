@@ -299,7 +299,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
               src={activity.user.imageUrl}
               width="25"
               height="25"/>
-            <span>{activity.user.name}</span>
+            <span>{activity.user.username}</span>
           </Link>
         </span>
         <span className="ml-3 mr-auto overflow-hidden text-truncate">
@@ -324,7 +324,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
               {activity.board.team.name}
             </small>
           }
-          <small className="ml-2">
+          <small className="ml-2 float-right">
             {moment(activity.createdAt).fromNow()}
           </small>
         </div>
@@ -332,7 +332,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
           <div>
             <Link to={`/user/${activity.user.username}`}>
               <img
-                className="rounded border"
+                className="rounded"
                 src={activity.user.imageUrl}
                 alt={activity.user.name}
                 width="35"
