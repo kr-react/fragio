@@ -22,6 +22,7 @@
   "public": "Public",
   "private": "Private",
   "sourceCode": "Source Code",
+  "roadmap": "Roadmap",
   "team_plural": "Teams",
   "user_plural": "Users",
   "member_plural": "Members",
@@ -97,5 +98,12 @@
     "renamedList": "Renamed list",
     "renamedCard": "Renamed card",
     "movedCard": "Moved card"
+  },
+  "landing": {
+    "title": "Built for people",
+    "subtitle": "Fragio is kanban board, from personal to business, make your life easier.",
+    "card1": "Create a page on twitter",
+    "card2": "Allow users to search for activities",
+    "card3": "Prepare database maintenance"
   }
 }

@@ -67,13 +67,24 @@ export default function HomeRoute({ match }) {
             </li>
           }
           {!user &&
-            <Link to={`/login?location=${location.href.slice(location.origin.length)}`}>
-              <button
-                type="button"
-                className="btn btn-outline-light btn-sm">
-                  {t("action.login")}
-              </button>
-            </Link>
+            <div>
+              <Link to={`/login?location=${location.href.slice(location.origin.length)}`}>
+                <button
+                  type="button"
+                  className="btn btn-outline-light btn-sm">
+                    {t("action.signIn")}
+                </button>
+              </Link>
+              <Link
+                className="ml-2"
+                to={`/login?location=${location.href.slice(location.origin.length)}`}>
+                <button
+                  type="button"
+                  className="btn btn-light btn-sm">
+                    {t("action.login")}
+                </button>
+              </Link>
+            </div>
           }
         </ul>
       </nav>

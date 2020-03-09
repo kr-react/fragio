@@ -381,6 +381,17 @@ export function Footer(props: FooterProps) {
   const { t } = useTranslation();
   const date = new Date();
 
+  const links = [
+    {
+      name: t("roadmap"),
+      href: process.env.ROADMAP_URL,
+    },
+    {
+      name: t("sourceCode"),
+      href: process.env.SOURCE_CODE_URL,
+    },
+  ];
+
   return (
     <footer className={props.className}>
       <hr className="my-4"/>
@@ -395,11 +406,14 @@ export function Footer(props: FooterProps) {
           <b>{process.env.APP_NAME}</b>
         </h6>
         <div className="w-100 text-right">
-          <a
-            href="https://github.com/happotato/fragio"
-            target="blank">
-            {t("sourceCode")}
-          </a>
+          {links.map(link =>
+            <a
+              className="ml-2"
+              href={link.href}
+              target="blank">
+              {link.name}
+            </a>
+          )}
         </div>
       </div>
     </footer>

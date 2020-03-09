@@ -59,7 +59,9 @@ module.exports = {
         MODE: process.env.NODE_ENV,
         PORT: JSON.stringify(process.env.PORT),
         API_URL: JSON.stringify(process.env.API_URL),
-        APP_NAME: JSON.stringify(process.env.APP_NAME)
+        APP_NAME: JSON.stringify(process.env.APP_NAME),
+        SOURCE_CODE_URL: JSON.stringify(process.env.SOURCE_CODE_URL),
+        ROADMAP_URL: JSON.stringify(process.env.ROADMAP_URL)
       }
     }),
     new CopyPlugin([
