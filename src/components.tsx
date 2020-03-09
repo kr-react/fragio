@@ -175,15 +175,26 @@ export function Sticky(props: StickyProps) {
         container = container.parentElement;
       }
 
-      container.addEventListener("scroll", () => onScrollHandler(container, target));
-      onScrollHandler(container, target);
+      target.style.height = `${container.clientHeight}px`;
+
+      const resizeObserver = new ResizeObserver(entries => {
+          target.style.height = `${container.clientHeight}px`;
+      });
+
+      resizeObserver.observe(container);
+      resizeObserver.observe(document.body);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
     }
   }, [ref]);
 
-  return {
-    ...props.children,
-    ref
-  };
+  const children = {...props.children};
+  children.ref = ref;
+  children.props.className += " sticky-top";
+
+  return children;
 }
 
 export function ActivityComponent(props: ActivityComponentProps) {

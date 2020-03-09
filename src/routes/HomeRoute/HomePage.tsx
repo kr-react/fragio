@@ -100,65 +100,67 @@ export default function HomePage({ match }) {
   return (
     <div className="container-fluid h-100 bg-light overflow-auto">
       <div className="row h-100">
-        <Sticky>
-          <div className="col p-3 overflow-auto h-100">
-            <div className="d-flex flex-row align-items-center justify-content-between">
-              <span>{t("board_plural")}</span>
-              <button
-                type="button"
-                className="btn btn-outline-primary btn-sm"
-                onClick={() => history.push("/newboard")}>
-                {t("action.new")}
-              </button>
+        <div className="col px-0">
+          <Sticky>
+            <div className="p-3 overflow-auto">
+              <div className="d-flex flex-row align-items-center justify-content-between">
+                <span>{t("board_plural")}</span>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => history.push("/newboard")}>
+                  {t("action.new")}
+                </button>
+              </div>
+              <div className="input-group input-group-sm mt-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  value={searchState.board}
+                  onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
+                  placeholder={t("action.findBoard")}
+                  aria-label="Board"/>
+              </div>
+              <div className="d-flex flex-column mt-2">
+                {localState.boards.filter(b => includesIgnoreCase(b.name, searchState.board)).map(board =>
+                  <Link
+                    className="mt-2"
+                    to={`board/${board.id}`}>
+                    {board.name}
+                  </Link>
+                )}
+              </div>
+              <hr className="my-3"/>
+              <div className="d-flex flex-row align-items-center justify-content-between">
+                <span>{t("team_plural")}</span>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => history.push("/newteam")}>
+                  {t("action.new")}
+                </button>
+              </div>
+              <div className="input-group input-group-sm mt-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder={t("action.findTeam")}
+                  value={searchState.team}
+                  onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
+                  aria-label="Team"/>
+              </div>
+              <div className="d-flex flex-column mt-2">
+                {localState.teams.filter(t => includesIgnoreCase(t.name, searchState.team)).map(team =>
+                  <Link
+                    className="mt-2"
+                    to={`team/${team.id}`}>
+                    {team.name}
+                  </Link>
+                )}
+              </div>
             </div>
-            <div className="input-group input-group-sm mt-2">
-              <input
-                type="text"
-                className="form-control"
-                value={searchState.board}
-                onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
-                placeholder={t("action.findBoard")}
-                aria-label="Board"/>
-            </div>
-            <div className="d-flex flex-column mt-2">
-              {localState.boards.filter(b => includesIgnoreCase(b.name, searchState.board)).map(board =>
-                <Link
-                  className="mt-2"
-                  to={`board/${board.id}`}>
-                  {board.name}
-                </Link>
-              )}
-            </div>
-            <hr className="my-3"/>
-            <div className="d-flex flex-row align-items-center justify-content-between">
-              <span>{t("team_plural")}</span>
-              <button
-                type="button"
-                className="btn btn-outline-primary btn-sm"
-                onClick={() => history.push("/newteam")}>
-                {t("action.new")}
-              </button>
-            </div>
-            <div className="input-group input-group-sm mt-2">
-              <input
-                type="text"
-                className="form-control"
-                placeholder={t("action.findTeam")}
-                value={searchState.team}
-                onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
-                aria-label="Team"/>
-            </div>
-            <div className="d-flex flex-column mt-2">
-              {localState.teams.filter(t => includesIgnoreCase(t.name, searchState.team)).map(team =>
-                <Link
-                  className="mt-2"
-                  to={`team/${team.id}`}>
-                  {team.name}
-                </Link>
-              )}
-            </div>
-          </div>
-        </Sticky>
+          </Sticky>
+        </div>
         <main className="col-md-8 col-lg-7 flex-column bg-white pt-3 px-3 border-left border-right d-none d-sm-none d-md-flex">
           {localState.activities.map(activity =>
             <React.Fragment>
@@ -167,20 +169,22 @@ export default function HomePage({ match }) {
             </React.Fragment>
           )}
         </main>
-        <Sticky>
-          <div className="col pt-3 px-3 d-none d-sm-none d-md-none d-lg-block overflow-auto h-100">
-            <div>{t("recent")}</div>
-            <div className="d-flex flex-column">
-              {localState.history.map(entry =>
-                <Link
-                  className="mt-2"
-                  to={`board/${entry.board.id}`}>
-                  {entry.board.name}
-                </Link>
-              )}
+        <div className="col p-0 d-none d-sm-none d-md-none d-lg-block">
+          <Sticky>
+            <div className="p-3 overflow-auto">
+              <div>{t("recent")}</div>
+              <div className="d-flex flex-column">
+                {localState.history.map(entry =>
+                  <Link
+                    className="mt-2"
+                    to={`board/${entry.board.id}`}>
+                    {entry.board.name}
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-        </Sticky>
+          </Sticky>
+        </div>
       </div>
     </div>
   );
