@@ -299,12 +299,17 @@ export function ActivityComponent(props: ActivityComponentProps) {
               src={activity.user.imageUrl}
               width="25"
               height="25"/>
-            <span>{activity.user.username}</span>
           </Link>
+          <b>{activity.user.username}</b>
         </span>
         <span className="ml-3 mr-auto overflow-hidden text-truncate">
           {getBody()}
         </span>
+        <Link
+          className="ml-3"
+          to={`board/${activity.board.id}`}>
+          <b>{activity.board.name}</b>
+        </Link>
         <span className="ml-3">
           {moment(activity.createdAt).fromNow()}
         </span>
