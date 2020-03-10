@@ -102,6 +102,7 @@
   "landing": {
     "title": "Built for people",
     "subtitle": "Fragio is kanban board, from personal to business, make your life easier.",
+    "listTitle": "To-Do",
     "card1": "Create a page on twitter",
     "card2": "Allow users to search for activities",
     "card3": "Prepare database maintenance"

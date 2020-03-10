@@ -17,10 +17,6 @@ export default function UserPage({ match }) {
     return <Redirect to="/"/>
   }
 
-  const title = "Built for people";
-  const subtitle = "Fragio is kanban board, from personal to business, make your life easier.";
-
-  const listTitle = "To-Do";
   const cards = [
     {
       name: t("landing.card1"),
@@ -65,15 +61,15 @@ export default function UserPage({ match }) {
 
   return (
     <div className="h-100">
-      <div className="bg-dark h-75 w-100 mw-100 mh-75">
+      <div className="bg-dark h-75">
         <div className="container h-100 d-flex flex-column flex-lg-row align-items-center justify-content-center">
           <div className="text-wrap">
-            <h1 className="text-white ">{title}</h1>
-            <h3 className="text-white-50">{subtitle}</h3>
+            <h1 className="text-white ">{t("landing.title")}</h1>
+            <h4 className="text-white-50">{t("landing.subtitle")}</h4>
           </div>
-          <div className="d-flex d-lg-none card shadow mt-4 h-50 w-100">
+          <div className="d-flex d-lg-none card shadow my-4 h-50 w-100">
             <div className="card-header px-2">
-              <b>{listTitle}</b>
+              <b>{t("landing.listTitle")}</b>
             </div>
             <div className="card-body bg-light overflow-auto p-2 pb-0">
               {cards.map(card =>
@@ -100,7 +96,7 @@ export default function UserPage({ match }) {
           </div>
           <div className="d-none d-lg-flex card shadow ml-4 h-75 w-50">
             <div className="card-header px-2">
-              <b>{listTitle}</b>
+              <b>{t("landing.listTitle")}</b>
             </div>
             <div className="card-body bg-light overflow-auto p-2 pb-0">
               {cards.map(card =>
