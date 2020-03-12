@@ -45,29 +45,32 @@ export function useModal() {
   });
 
   React.useEffect(() => {
-    const elem = document.createElement("div")
-    const dialog = document.createElement("div");
+    let element: Element = undefined;
+    let dialog: Element = undefined;
 
-    elem.setAttribute("class", "modal fade");
-    elem.setAttribute("tabindex", "-1");
-    elem.setAttribute("role", "dialog");
+    if (!(element = document.querySelector("#use-modal"))) {
+      element = document.createElement("div")
+      dialog = document.createElement("div");
 
-    dialog.setAttribute("class", "modal-dialog");
-    dialog.setAttribute("role", "document");
+      element.setAttribute("id", "use-modal");
+      element.setAttribute("class", "modal fade");
+      element.setAttribute("tabindex", "-1");
+      element.setAttribute("role", "dialog");
 
-    document.body.appendChild(elem);
-    elem.appendChild(dialog);
+      dialog.setAttribute("class", "modal-dialog");
+      dialog.setAttribute("role", "document");
+
+      document.body.appendChild(element);
+      element.appendChild(dialog);
+    }
 
     setState({
       ...state,
-      element: elem,
+      element,
     });
 
     return () => {
-      $(elem).modal("hide");
-      setTimeout(() => {
-        document.body.removeChild(elem);
-      }, 2000);
+      $(element).modal("hide");
     };
   }, []);
 

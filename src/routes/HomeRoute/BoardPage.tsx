@@ -144,7 +144,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
             {getLabels(card.id).map(label =>
               <button
                 className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
-                onClick={() => removeLabel(card.id, label.id)}
+                onClick={() => {
+                  removeLabel(card.id, label.id);
+                  openModal(card);
+                }}
                 style={{
                   backgroundColor: `#${label.color.toString(16)}`,
                   borderColor: `#${label.color.toString(16)}`,
@@ -167,7 +170,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 {getUnusedLabels(card.id).map(label =>
                   <span
                     className="dropdown-item pointer"
-                    onClick={() => addLabel(card.id, label.id)}
+                    onClick={() => {
+                      addLabel(card.id, label.id);
+                      openModal(card);
+                    }}
                     href="#">
                     {label.name}
                   </span>
