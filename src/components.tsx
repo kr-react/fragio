@@ -40,17 +40,10 @@ export function useSearch<T>(arr: T[], map: (T) => string) {
 }
 
 export function useModal() {
-  const [state, setState] = React.useState({
-    element: null,
-  });
-
   React.useEffect(() => {
-    let element: Element = undefined;
-    let dialog: Element = undefined;
-
-    if (!(element = document.querySelector("#use-modal"))) {
-      element = document.createElement("div")
-      dialog = document.createElement("div");
+    if (!document.querySelector("#use-modal")) {
+      const element = document.createElement("div")
+      const dialog = document.createElement("div");
 
       element.setAttribute("id", "use-modal");
       element.setAttribute("class", "modal fade");
@@ -63,64 +56,24 @@ export function useModal() {
       document.body.appendChild(element);
       element.appendChild(dialog);
     }
-
-    setState({
-      ...state,
-      element,
-    });
-
-    return () => {
-      $(element).modal("hide");
-    };
   }, []);
 
-  function modal(com?: (HTMLDivElement) => JSX.Element) {
-    if (!com) {
-      $(state.element).modal("hide");
-      return;
-    }
+  function modal(action?: string | ((HTMLDivElement) => JSX.Element), callback: any = undefined) {
+    const jqElement= $("#use-modal");
 
-    ReactDOM.render(com(state.element), state.element.firstElementChild);
-    $(state.element).modal();
+    if (!action) {
+      jqElement.modal("hide");
+    } else {
+      if (typeof(action) === "string") {
+        jqElement.on(action, callback);
+      } else {
+        ReactDOM.render(action(jqElement[0]), jqElement[0].firstElementChild);
+        jqElement.modal();
+      }
+    }
   }
 
   return modal;
-}
-
-export function AsyncComponent(props: any) {
-  const [state, setState] = React.useState({
-    code: 1,
-    result: null,
-  });
-
-  React.useEffect(() => {
-    props.func.apply(props.args[0], props.args.slice(1, props.func.length + 1))
-      .then(value => {
-        setState({
-          code: 2,
-          result: value,
-        });
-      }, reason => {
-        setState({
-          code: 0,
-          result: reason,
-        });
-      });
-  }, []);
-
-  switch(state.code) {
-    case 2: {
-      return props.ok(state.result);
-    };
-
-    case 1: {
-      return props.loading();
-    };
-
-    default: {
-      return props.fail(state.result);
-    };
-  }
 }
 
 export function Icon(props: IconProps) {

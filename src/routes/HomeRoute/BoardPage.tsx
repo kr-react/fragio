@@ -28,13 +28,13 @@ interface BoardComponentProps {
   lists: List[];
   cards: Card[];
   editable: boolean;
-  boardChanged: (card: List, props: any) => void;
-  listChanged: (list: List, props: any) => void;
-  cardChanged: (card: Card, props: any) => void;
-  listCreated: (boardId: string) => void;
-  cardCreated: (boardId: string, listId: string) => void;
-  listDeleted: (list: List) => void;
-  cardDeleted: (card: Card) => void;
+  onCardClick: (card: Card) => void;
+  onCardUpdate: (card: Card, props: any) => void;
+  onCardCreate: (boardId: string, listId: string) => void;
+  onCardDelete: (card: Card) => void;
+  onListUpdate: (list: List, props: any) => void;
+  onListCreate: (boardId: string) => void;
+  onListDelete: (list: List) => void;
 }
 
 function getClosestElementIndex(x1: number, y1: number, elems: HTMLElement[]) {
@@ -53,6 +53,24 @@ function getClosestElementIndex(x1: number, y1: number, elems: HTMLElement[]) {
   }
 
   return pos;
+}
+
+function getLabels(labels: Label[], card: Card) {
+    return labels.filter(label => card.labelIds.includes(label.id));
+}
+
+function getUnusedLabels(labels: Label[], card: Card) {
+    return labels.filter(label => !card.labelIds.includes(label.id));
+}
+
+function getUrlsFromString(str: string) {
+    const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
+    return pattern.exec(str) || [];
+}
+
+function getImagesFromString(str: string) {
+    const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)\.(jpg|png)/;
+    return pattern.exec(str) || [];
 }
 
 function BoardComponent(boardProps: BoardComponentProps) {
@@ -77,129 +95,14 @@ function BoardComponent(boardProps: BoardComponentProps) {
           position: getClosestElementIndex(x, y, children)
         };
 
-        console.log({x, y, elem, children, data});
         boardProps.listChanged({...item.list}, data);
       }
     }
   });
 
-  function removeLabel(cardId: string, labelId: string) {
-    const card = cards.find(card => card.id == cardId);
-    boardProps.cardChanged({...card}, {
-      labelIds: card.labelIds.filter(label => label != labelId),
-    });
-  }
-
-  function addLabel(cardId: string, labelId: string) {
-    const card = cards.find(card => card.id == cardId);
-    boardProps.cardChanged({...card}, {
-      labelIds: card.labelIds.concat([labelId]),
-    });
-  }
-
   function getCards(listId: string) {
     return cards.filter(card => card.listId == listId)
       .sort((a, b) => a.position - b.position);
-  }
-
-  function getLabels(cardId: string) {
-    const ids = cards.find(card => card.id == cardId).labelIds;
-    return board.labels.filter(label => ids.includes(label.id));
-  }
-
-  function getUnusedLabels(cardId: string) {
-    const ids = cards.find(card => card.id == cardId).labelIds;
-    return board.labels.filter(label => !ids.includes(label.id));
-  }
-
-  function getUrlsFromString(str: string) {
-      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
-      return pattern.exec(str) || [];
-  }
-
-  function getImagesFromString(str: string) {
-      const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)\.(jpg|png)/;
-      return pattern.exec(str) || [];
-  }
-
-  function openModal(card: Card) {
-    if (!card) {
-      modal();
-      return;
-    }
-
-    modal(() =>
-      <div className="modal-content">
-        <div className="modal-header">
-          <h6 className="modal-title">{card.name}</h6>
-          <button
-            className="close"
-            aria-label="Close"
-            onClick={() => modal()}>
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div className="modal-body">
-          <div className="d-flex flex-row flex-wrap">
-            {getLabels(card.id).map(label =>
-              <button
-                className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
-                onClick={() => {
-                  removeLabel(card.id, label.id);
-                  openModal(card);
-                }}
-                style={{
-                  backgroundColor: `#${label.color.toString(16)}`,
-                  borderColor: `#${label.color.toString(16)}`,
-                }}>
-                <span>{label.name}</span>
-              </button>
-            )}
-            <div className="dropdown">
-              <button
-                class="btn btn-secondary btn-sm dropdown-toggle mr-2 mb-2"
-                id="labels-dropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false">
-                {t("action.new")}
-              </button>
-              <div
-                className="dropdown-menu shadow-sm"
-                aria-labelledby="labels-dropdown">
-                {getUnusedLabels(card.id).map(label =>
-                  <span
-                    className="dropdown-item pointer"
-                    onClick={() => {
-                      addLabel(card.id, label.id);
-                      openModal(card);
-                    }}
-                    href="#">
-                    {label.name}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <p className="text-wrap">
-            {card.description}
-            {!card.description &&
-              <span className="text-muted">{t("desc.noDescription")}</span>
-            }
-          </p>
-        </div>
-        <div className="modal-footer">
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => {
-              modal();
-              boardProps.cardDeleted(card);
-            }}>
-            {t("action.remove")}
-          </button>
-        </div>
-      </div>
-    );
   }
 
   function CardComponent(props: {card: Card}) {
@@ -211,14 +114,14 @@ function BoardComponent(boardProps: BoardComponentProps) {
       }),
     });
 
-    const labels = getLabels(card.id);
+    const labels = getLabels(board.labels, card);
     const imageUrls = getImagesFromString(card.description);
 
     return (
       <div
         ref={cardDragRef}
         className="card shadow-sm mb-2 pointer"
-        onClick={() => openModal(card)}
+        onClick={() => boardProps.onCardClick(card)}
         style={{opacity}}>
         {imageUrls.length > 0 &&
           <img
@@ -267,7 +170,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
         const children = elem.querySelector(":scope > div[draggable='true']") || [];
 
-        boardProps.cardChanged({...item.card}, {
+        boardProps.onCardUpdate({...item.card}, {
           position: getClosestElementIndex(x, y, children),
           listId: list.id
         });
@@ -290,12 +193,12 @@ function BoardComponent(boardProps: BoardComponentProps) {
           <b
             contentEditable={boardProps.editable}
             onBlur={e => {
-              const name = e.currentTarget.innerHTML;
+              const name = e.currentTarget.innerText;
 
               if (name == list.name)
                 return;
 
-              boardProps.listChanged({...list}, {
+              boardProps.onListUpdate({...list}, {
                 name,
               });
             }}>
@@ -324,7 +227,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 <span
                   className="dropdown-item pointer"
                   onClick={() => {
-                    boardProps.listChanged({...list}, {
+                    boardProps.onListUpdate({...list}, {
                       position: Math.max(list.position - 1, 0)
                     });
                   }}>
@@ -333,7 +236,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 <span
                   className="dropdown-item pointer"
                   onClick={() => {
-                    boardProps.listChanged({...list}, {
+                    boardProps.onListUpdate({...list}, {
                       position: Math.min(list.position + 1, lists.length - 1)
                     });
                   }}>
@@ -342,7 +245,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                 <div class="dropdown-divider"></div>
                 <span
                   className="dropdown-item pointer"
-                  onClick={() => boardProps.listDeleted(list)}>
+                  onClick={() => boardProps.onListDelete(list)}>
                   {t("action.delete")}
                 </span>
               </div>
@@ -356,7 +259,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
             <button
               type="button"
               className="btn btn-secondary btn-sm shadow-sm w-100 mb-2"
-              onClick={() => boardProps.cardCreated(board.id, list.id)}>
+              onClick={() => boardProps.onCardCreate(board.id, list.id)}>
               {t("action.create")}
             </button>
           }
@@ -381,7 +284,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
       {boardProps.editable &&
         <div
           className="shadow-sm card mh-100 bg-light p-2 mr-3 text-center pointer"
-          onClick={() => boardProps.listCreated(board.id)}
+          onClick={() => boardProps.onListCreate(board.id)}
           style={{
             width: "300px",
             minWidth: "300px",
@@ -395,7 +298,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
       {lists.sort((a, b) => a.position - b.position).map(list =>
         <ListComponent list={list}/>
       )}
-      <div className="p-1"></div>
+      <div className="p-1"/>
     </div>
   );
 
@@ -415,10 +318,11 @@ function BoardComponent(boardProps: BoardComponentProps) {
 }
 
 export default function BoardPage({ match }) {
-  const { t } = useTranslation();
   const { user, token } = useSelector<ApplicationState>(state => state);
+  const modal = useModal();
   const history = useHistory();
   const api = new FragioAPI(process.env.API_URL, token);
+  const { t } = useTranslation();
   const [localState, setLocalState] = React.useState<{
     board: Board,
     lists: List[],
@@ -426,6 +330,7 @@ export default function BoardPage({ match }) {
     teams: Team[],
     activities: Activity[],
     selectedTab: number,
+    selectedCardIndex: number,
   }>(undefined);
 
   React.useEffect(() => {
@@ -444,6 +349,7 @@ export default function BoardPage({ match }) {
           teams,
           activities,
           selectedTab: 0,
+          selectedCardIndex: undefined,
         });
       } catch (err) {
         setLocalState(null);
@@ -452,6 +358,124 @@ export default function BoardPage({ match }) {
 
     request();
   }, [match, user]);
+
+  React.useEffect(() => {
+    if (!localState) return;
+
+    const index = localState.selectedCardIndex;
+
+    if (!isNaN(index)) {
+      modal(() =>
+        <CardModal
+          card={localState.cards[index]}
+          editable={canEdit(user)}/>
+      );
+    } else {
+      modal();
+    }
+  }, [localState]);
+
+  React.useEffect(() => {
+    return () => modal();
+  }, []);
+
+  function CardModal(props: { card: Card, editable: boolean}) {
+    const {card, editable} = props;
+
+    return (
+      <div className="modal-content">
+        <div className="modal-header">
+          <h6 className="modal-title">
+            <b
+              contentEditable={editable}
+              onBlur={e => {
+                onCardUpdateHandler({...card}, {
+                  name: e.currentTarget.innerText,
+                });
+              }}>
+              {card.name}
+            </b>
+          </h6>
+          <button
+            className="close"
+            aria-label="Close"
+            onClick={() => selectCard(undefined)}>
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="d-flex flex-row flex-wrap">
+            {getLabels(localState.board.labels, card).map(label =>
+              <button
+                className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
+                onClick={() => {
+                  if (!editable) return;
+
+                  onCardUpdateHandler({...card}, {
+                    labelIds: card.labelIds.filter(id => id != label.id)
+                  });
+                }}
+                style={{
+                  backgroundColor: `#${label.color.toString(16)}`,
+                  borderColor: `#${label.color.toString(16)}`,
+                }}>
+                <span>{label.name}</span>
+              </button>
+            )}
+            {editable &&
+              <div className="dropdown">
+                <button
+                  class="btn btn-secondary btn-sm dropdown-toggle mr-2 mb-2"
+                  id="labels-dropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false">
+                  {t("action.new")}
+                </button>
+                <div
+                  className="dropdown-menu shadow-sm"
+                  aria-labelledby="labels-dropdown">
+                  {getUnusedLabels(localState.board.labels, card).map(label =>
+                    <span
+                      className="dropdown-item pointer"
+                      onClick={() => {
+                        if (!editable) return;
+
+                        onCardUpdateHandler({...card}, {
+                          labelIds: card.labelIds.concat([label.id])
+                        });
+                      }}>
+                      {label.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            }
+          </div>
+          <textarea
+            className="text-wrap rounded mt-2 w-100 border-0"
+            placeholder={t("desc.noDescription")}
+            disabled={!editable}
+            defaultValue={card.description}
+            onBlur={e => {
+              onCardUpdateHandler({...card}, {
+                description: e.currentTarget.value,
+              });
+            }}>
+          </textarea>
+        </div>
+        {editable &&
+          <div className="modal-footer">
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => onCardDeleteHandler(card)}>
+              {t("action.remove")}
+            </button>
+          </div>
+        }
+      </div>
+    );
+  }
 
   function canEdit(u: User) {
     const { board, teams } = localState;
@@ -470,7 +494,181 @@ export default function BoardPage({ match }) {
     setLocalState({
       ...localState,
       selectedTab: index
+      selectedCardIndex: undefined
     });
+  }
+
+  function selectCard(card: Card) {
+    const index = card ? localState.cards.findIndex(c => c.id === card.id) : undefined;
+
+    setLocalState({
+      ...localState,
+      selectedCardIndex: index,
+    });
+  }
+
+  function onCardUpdateHandler(card: Card, changes: any) {
+    let newCards = [...localState.cards];
+    let index = newCards.findIndex(c => c.id == card.id);
+
+    if ("position" in changes) {
+      for (const c of newCards) {
+        if (c.position > card.position && c.listId == card.listId) {
+          c.position--;
+        }
+
+        if (c.position >= changes.position && c.listId == changes.listId) {
+          c.position++;
+        }
+      }
+
+      newCards[index].position = changes.position;
+    }
+
+    if ("name" in changes) {
+      newCards[index].name = changes.name;
+    }
+
+    if ("description" in changes) {
+      newCards[index].description = changes.description;
+    }
+
+    if ("listId" in changes) {
+      newCards[index].listId = changes.listId;
+    }
+
+    if ("labelIds" in changes) {
+      newCards[index].labelIds = changes.labelIds;
+    }
+
+    setLocalState({
+      ...localState,
+      cards: newCards
+    });
+
+    api.updateCard(card.list.boardId, card.listId, card.id, changes)
+      .catch(() => {
+        newCards = [...localState.cards];
+        index = newCards.findIndex(c => c.id == card.id);
+        newCards[index] = card;
+
+        setLocalState({
+          ...localState,
+          cards: newCards
+        });
+      });
+  }
+
+  function onCardCreateHandler(boardId: string, listId: string) {
+    api.createCard(boardId, listId, {
+      name: t("tempName.card"),
+      position: 0,
+    }).then(card => {
+      const cards = [...localState.cards];
+
+      for (const c of cards) {
+        c.position++;
+      }
+
+      setLocalState({
+        ...localState,
+        cards: cards.concat([card])
+      });
+    });
+  }
+
+  function onCardDeleteHandler(card: Card) {
+    api.deleteCard(card.list.boardId, card.listId, card.id)
+      .then(() => {
+        const selectedCard = localState.cards[localState.selectedCardIndex];
+        const cards = [...localState.cards];
+
+        for (const c of cards) {
+          c.position++;
+        }
+
+        setLocalState({
+          ...localState,
+          cards: localState.cards.filter(c => c.id != card.id),
+          selectedCard: card.id == selectedCard.id ? undefined : localState.selectedCardIndex,
+        });
+      });
+  }
+
+  function onListUpdateHandler(list: List, changes: any) {
+    let newLists = [...localState.lists];
+    let index = newLists.findIndex(l => l.id == list.id);
+
+    if ("position" in changes) {
+      for (const l of newLists) {
+        if (l.position > list.position) {
+          l.position--;
+        }
+
+        if (l.position >= changes.position) {
+          l.position++;
+        }
+      }
+
+      newLists[index].position = changes.position;
+    }
+
+    if ("name" in changes) {
+      newLists[index].name = changes.name;
+    }
+
+    setLocalState({
+      ...localState,
+      lists: newLists
+    });
+
+    api.updateList(list.boardId, list.id, changes)
+      .catch(() => {
+        newLists = [...localState.lists];
+        index = newLists.findIndex(l => l.id == list.id);
+        newLists[index] = list;
+
+        setLocalState({
+          ...localState,
+          lists: newLists
+        });
+      });
+  }
+
+  function onListCreateHandler(boardId: string) {
+    api.createList(boardId, {
+      name: t("tempName.list"),
+      position: 0,
+    }).then(list => {
+      const lists = [...localState.lists];
+
+      for (const l of lists) {
+        l.position++;
+      }
+
+      setLocalState({
+        ...localState,
+        lists: lists.concat([list])
+      });
+    });
+  }
+
+  function onListDeleteHandler(list: List) {
+    api.deleteList(list.boardId, list.id)
+      .then(() => {
+        const lists = [...localState.lists];
+
+        for (const l of lists) {
+          if (l.position > list.position) {
+            l.position--;
+          }
+        }
+
+        setLocalState({
+          ...localState,
+          lists: lists.filter(l => l.id != list.id)
+        });
+      });
   }
 
   function BoardTab() {
@@ -483,145 +681,13 @@ export default function BoardPage({ match }) {
           lists={localState.lists}
           cards={localState.cards}
           editable={canEdit(user)}
-          listChanged={(list, changes) => {
-            const newLists = [...localState.lists];
-            const index = newLists.findIndex(l => l.id == list.id);
-
-            if (changes.position != null) {
-              for (const l of newLists) {
-                if (l.position > list.position) {
-                  l.position--;
-                }
-
-                if (l.position >= changes.position) {
-                  l.position++;
-                }
-              }
-
-              newLists[index].position = changes.position;
-            }
-
-            if (changes.name) {
-              newLists[index].name = changes.name;
-            }
-
-            setLocalState({
-              ...localState,
-              lists: newLists
-            });
-
-            api.updateList(list.boardId, list.id, {
-              name: changes.name,
-              position: changes.position,
-            }).catch(() => {
-              newLists = [...localState.lists];
-              index = newLists.findIndex(l => l.id == list.id);
-              newLists[index] = list;
-
-              setLocalState({
-                ...localState,
-                lists: newLists
-              });
-            });
-          }}
-          cardChanged={(card, changes) => {
-            const newCards = [...localState.cards];
-            const index = newCards.findIndex(c => c.id == card.id);
-
-            if (changes.position != null) {
-              for (const c of newCards) {
-                if (c.position > card.position && c.listId == card.listId) {
-                  c.position--;
-                }
-
-                if (c.position >= changes.position && c.listId == changes.listId) {
-                  c.position++;
-                }
-              }
-
-              newCards[index].position = changes.position;
-            }
-
-            if (changes.listId) {
-              newCards[index].listId = changes.listId;
-            }
-
-            if (changes.labelIds) {
-              newCards[index].labelIds = changes.labelIds;
-            }
-
-            setLocalState({
-              ...localState,
-              cards: newCards
-            });
-
-            api.updateCard(card.list.boardId, card.listId, card.id, {
-              position: changes.position,
-              listId: changes.listId,
-              labelIds: changes.labelIds,
-            }).catch(() => {
-              newCards = [...localState.cards];
-              index = newCards.findIndex(c => c.id == card.id);
-              newCards[index] = card;
-
-              setLocalState({
-                ...localState,
-                cards: newCards
-              });
-            });
-          }}
-          listCreated={boardId => {
-            api.createList(boardId, {
-              name: t("tempName.list"),
-              position: 0,
-            }).then(list => {
-              const lists = [...localState.lists];
-
-              for (const l of lists) {
-                l.position++;
-              }
-
-              setLocalState({
-                ...localState,
-                lists: lists.concat([list])
-              });
-            });
-          }}
-          cardCreated={(boardId, listId) => {
-            api.createCard(boardId, listId, {
-              name: t("tempName.card"),
-              position: 0,
-            }).then(card => {
-              const cards = [...localState.cards];
-
-              for (const c of cards) {
-                c.position++;
-              }
-
-              setLocalState({
-                ...localState,
-                cards: cards.concat([card])
-              });
-            });
-          }}
-          listDeleted={list => {
-            api.deleteList(list.boardId, list.id)
-              .then(() => {
-                setLocalState({
-                  ...localState,
-                  lists: localState.lists.filter(l => l.id != list.id)
-                });
-              });
-          }}
-          cardDeleted={card => {
-            api.deleteCard(card.list.boardId, card.listId, card.id)
-              .then(() => {
-                setLocalState({
-                  ...localState,
-                  cards: localState.cards.filter(c => c.id != card.id)
-                });
-              });
-          }}/>
+          onCardClick={card => selectCard(card)}
+          onCardUpdate={onCardUpdateHandler}
+          onCardCreate={onCardCreateHandler}
+          onCardDelete={onCardDeleteHandler}
+          onListUpdate={onListUpdateHandler}
+          onListCreate={onListCreateHandler}
+          onListDelete={onListDeleteHandler}/>
       </DndProvider>
     );
   }
@@ -660,7 +726,6 @@ export default function BoardPage({ match }) {
 
   function LabelsTab() {
     const [search, labels] = useSearch(localState.board.labels, a => a.name.toLowerCase());
-    const modal = useModal();
 
     function randomNumber(min:number, max: number) {
       return Math.floor(Math.random() * (max - min) + min);
