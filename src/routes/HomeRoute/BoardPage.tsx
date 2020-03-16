@@ -90,13 +90,9 @@ function BoardComponent(boardProps: BoardComponentProps) {
       const elem = document.querySelector(`#board-${board.id}`);
       const children = elem.querySelectorAll(":scope > div[draggable='true']") || [];
 
-      if (boardProps.listChanged) {
-        const data = {
-          position: getClosestElementIndex(x, y, children)
-        };
-
-        boardProps.listChanged({...item.list}, data);
-      }
+      boardProps.onListUpdate({...item.list}, {
+        position: getClosestElementIndex(x, y, children)
+      });
     }
   });
 
