@@ -288,7 +288,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
         <div className="mb-2 text-muted">
           <span><b>{activity.user.username}</b></span>
           <span> { t("activityBody.on")} </span>
-          <Link to={`board/${activity.board.id}`}>
+          <Link to={`/board/${activity.board.id}`}>
             <b>{activity.board.name}</b>
           </Link>
           {activity.board.team &&
