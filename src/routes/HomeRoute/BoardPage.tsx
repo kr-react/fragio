@@ -382,6 +382,17 @@ export default function BoardPage({ match }) {
   function CardModal(props: { card: Card, editable: boolean}) {
     const {card, editable} = props;
 
+    React.useEffect(() => {
+      setTimeout(() => {
+        const target = document.querySelector("#use-modal textarea");
+        resizeToScroll(target);
+      }, 200);
+    }, []);
+
+    function resizeToScroll(element: HTMLElement) {
+        element.style.height = `${element.scrollHeight}px`;
+    }
+
     return (
       <div className="modal-content">
         <div className="modal-header">
@@ -457,6 +468,7 @@ export default function BoardPage({ match }) {
             placeholder={t("desc.noDescription")}
             disabled={!editable}
             defaultValue={card.description}
+            onChange={e => resizeToScroll(e.currentTarget)}
             onBlur={e => {
               onCardUpdateHandler({...card}, {
                 description: e.currentTarget.value,
@@ -493,8 +505,8 @@ export default function BoardPage({ match }) {
   function setTab(index: number) {
     setLocalState({
       ...localState,
-      selectedTab: index
-      selectedCardIndex: undefined
+      selectedTab: index,
+      selectedCardIndex: undefined,
     });
   }
 
