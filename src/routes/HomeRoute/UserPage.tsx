@@ -143,7 +143,7 @@ export default function UserPage({ match }) {
       };
     });
 
-    function formSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
+    async function formSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
 
       const data = new FormData(e.currentTarget);
@@ -152,45 +152,30 @@ export default function UserPage({ match }) {
       const username = data.get("username") || null;
       const email = data.get("email") || null;
 
+      var imageUrl = user.imageUrl;
+
       if (imageFile) {
-        const reader = new FileReader();
+        var imageFormData = new FormData();
+        imageFormData.append("files", imageFile, imageFile.name);
 
-        reader.onload = () => {
-          fetch("https://192.168.0.25:7001", {
-            method: "POST",
-            body: reader.result,
-          }).then(res => res.text().then(imageUrl => {
-            api.updateUser(localState.user.username, {
-              name: name != localState.user.name ? name : null,
-              username: username != localState.user.username ? username : null,
-              email: email != localState.user.email ? email : null,
-              imageUrl
-            }).then(user => {
-              dispath({
-                type: "UPDATE_USER",
-                data: {
-                  user,
-                }
-              });
-            });
-          }));
-        };
-
-        reader.readAsArrayBuffer(imageFile);
-      } else {
-        api.updateUser(localState.user.username, {
-            name: name != localState.user.name ? name : null,
-            username: username != localState.user.username ? username : null,
-            email: email != localState.user.email ? email : null,
-        }).then(user => {
-          dispath({
-            type: "UPDATE_USER",
-            data: {
-              user,
-            }
-          });
-        });
+        imageUrl = await api.uploadUserImage(user.username, imageFormData);
       }
+
+      var res = await api.updateUser(localState.user.username, {
+          name: name != localState.user.name ? name : null,
+          username: username != localState.user.username ? username : null,
+          email: email != localState.user.email ? email : null,
+      });
+
+      dispath({
+        type: "UPDATE_USER",
+        data: {
+          user: {
+            ...user,
+            imageUrl
+          },
+        }
+      });
     }
 
     function passwordFormSubmitHandler(e: React.FormEvent<HTMLFormElement>) {

@@ -145,10 +145,11 @@ export interface Activity {
   card?: Card;
 }
 
-class ApiRequestOptions {
-  method?: "GET" | "POST" | "PATCH" | "DELETE" = "GET";
-  useToken?: boolean = false;
-  body?: any = null;
+interface ApiRequestOptions {
+  method: "GET" | "POST" | "PATCH" | "DELETE";
+  useToken?: boolean;
+  isFormData?: boolean;
+  body?: any;
 }
 
 export class FragioAPI {
@@ -160,18 +161,27 @@ export class FragioAPI {
     this.token = token;
   }
 
-  async request<T>(endpoint: string, options: ApiRequestOptions = new ApiRequestOptions) : Promise<T> {
+  async request<T>(endpoint: string, options: ApiRequestOptions) : Promise<T> {
+    var headers = {};
+
+    if (options.useToken && this.token) {
+        headers["Authorization"] = `Bearer ${this.token}`;
+    }
+
+    if (!options.isFormData) {
+        headers["Content-Type"] = "application/json";
+    }
+
     return fetch(`${this.url}/${endpoint}`, {
-      method: options.method,
-      headers: {
-        "Authorization": options.useToken && this.token ? `Bearer ${this.token}` : undefined,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(options.body)
+      method: options.method || "GET",
+      headers,
+      body: options.isFormData ? options.body : JSON.stringify(options.body)
     }).then(res => {
       if (res.ok) {
-        if (res.headers.has("Content-Type")) {
+        if (res.headers.get("Content-Type").includes("json")) {
           return res.json();
+        } else if (res.headers.has("Content-Type")) {
+          return res.text();
         }
 
         return Promise.resolve(null);
@@ -235,6 +245,15 @@ export class FragioAPI {
     return this.request(`api/v1/user/${username}`, {
       method: "PATCH",
       useToken: true,
+      body,
+    });
+  }
+
+  async uploadUserImage(username: string, body: FormData) : Promise<string> {
+    return this.request(`api/v1/user/${username}/image`, {
+      method: "POST",
+      useToken: true,
+      isFormData: true,
       body,
     });
   }
