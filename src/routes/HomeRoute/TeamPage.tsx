@@ -374,18 +374,6 @@ export default function TeamPage({ match }) {
               className="form-control form-control-sm"
               defaultValue={localState.team.name}/>
           </div>
-          <div className="form-group">
-            <label
-              for="image-url-input">
-              {t("desc.imageUrl")}
-            </label>
-            <input
-              id="image-url-input"
-              type="url"
-              name="imageUrl"
-              className="form-control form-control-sm"
-              defaultValue={localState.team.imageUrl}/>
-          </div>
           <div className="d-flex flex-row justify-content-between">
             <button
               type="submit"
