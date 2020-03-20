@@ -2,6 +2,7 @@ package main
 
 import (
     "os"
+    "fmt"
     "net/http"
     "strings"
     "path/filepath"
@@ -38,10 +39,17 @@ func publicHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    cert := os.Args[1]
-    priv := os.Args[2]
+    fmt.Printf("Listening to %v...\n", 5000)
 
     http.HandleFunc("/", publicHandler)
     http.HandleFunc("/dist/", distHandler)
-    http.ListenAndServeTLS(":5001", cert, priv, nil)
+
+    if len(os.Args) > 2 {
+        cert := os.Args[1]
+        priv := os.Args[2]
+
+        http.ListenAndServeTLS(":5000", cert, priv, nil)
+    } else {
+        http.ListenAndServe(":5000", nil)
+    }
 }

@@ -1,13 +1,12 @@
 {
-  "name": "noder",
+  "name": "fragio",
   "version": "1.0.0",
   "description": "Open source kanban board",
   "private": true,
   "scripts": {
     "start": "go run server.go",
-    "build": "npx webpack",
-    "watch": "npx webpack --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack",
+    "watch": "webpack --watch"
   },
   "author": "Wesley Santos",
   "license": "GPL-3.0",
