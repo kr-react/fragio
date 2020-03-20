@@ -1001,9 +1001,16 @@ export default function BoardPage({ match }) {
     <React.Fragment>
       <div className="bg-light border-bottom">
         <div className="container">
-          <h6 className="m-0 py-3">
-            <b>{localState.board.name}</b>
-          </h6>
+          <div>
+            <h6 className="m-0 py-3">
+              <b>{localState.board.name}</b>
+              {localState.board.team &&
+                <span className="badge badge-secondary ml-2">
+                  {localState.board.team.name}
+                </span>
+              }
+            </h6>
+          </div>
           <ul className="nav nav-tabs border-bottom-0 text-nowrap">
             <li
               className="nav-item pointer"
