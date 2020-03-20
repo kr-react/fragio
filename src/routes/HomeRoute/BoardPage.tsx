@@ -38,21 +38,19 @@ interface BoardComponentProps {
 }
 
 function getClosestElementIndex(x1: number, y1: number, elems: HTMLElement[]) {
-  let pos = 0;
-  let dist = Number.MAX_VALUE;
+  let [index, dist] = [0, Number.MAX_VALUE];
 
   for (let i = 0; i < elems.length; i++) {
-    const child = elems[i];
-    const { x:x2, y:y2 } = child.getBoundingClientRect();
-    const res = Math.sqrt(x1 - x1) + Math.sqrt(y1 - y2);
+    const { x:x2, y:y2 } = elems[i].getBoundingClientRect();
+    const d = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 
-    if (res < dist) {
-      pos = i;
-      dist = res;
+    if (d < dist) {
+      index = i;
+      dist = d;
     }
   }
 
-  return pos;
+  return index;
 }
 
 function getLabels(labels: Label[], card: Card) {
