@@ -1,16 +1,16 @@
 import * as React from "react";
-import { Redirect }  from "react-router-dom";
+import { Redirect, RouteComponentProps } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import {
   Footer,
-} from "~/src/components"
+} from "../../../src/components"
 import {
   ApplicationState,
-} from "~/src/common";
+} from "../../../src/common";
 
-export default function UserPage({ match }) {
-  const { user } = useSelector<ApplicationState>(state => state);
+export default function UserPage({ match }: RouteComponentProps<{username: string}>) {
+  const { user } = useSelector<ApplicationState, ApplicationState>(state => state);
   const { t } = useTranslation();
 
   if (user) {

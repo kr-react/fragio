@@ -4,16 +4,28 @@ import * as moment from "moment";
 import * as $ from "jquery";
 import { useTranslation } from 'react-i18next';
 import { Link } from "react-router-dom";
-import { Activity } from "~/src/common";
+import { Activity } from "./common";
+
+declare interface ResizeObserverEntry {
+  target: Element | SVGElement;
+}
+
+declare class ResizeObserver {
+  constructor(callback: (entries: ResizeObserverEntry[]) => void);
+  observe(target: Element): void;
+  unobserve(target: Element): void;
+  disconnect(): void;
+}
 
 interface StickyProps {
   children: JSX.Element;
-  onScroll: (e: HTMLElement) => void;
+  onScroll?: (e: HTMLElement) => void;
 }
 
 interface ActivityComponentProps {
+  as?: string | JSX.Element;
   activity: Activity;
-  compact: boolean;
+  compact?: boolean;
   component?: string;
   className?: string;
 }
@@ -24,19 +36,21 @@ interface FooterProps {
 
 interface IconProps {
   name: string;
-  fill: string;
+  fill?: string;
   width: React.ReactText;
   height: React.ReactText;
 }
 
-export function useSearch<T>(arr: T[], map: (T) => string) {
+export function useSearch<T>(arr: T[], map: (_: T) => string) {
   const [state, setState] = React.useState(arr);
   const func = (text: string) => setState(arr.filter(item => {
-    const m = map(item).toLowerCase();
-    return m.includes(text.toLowerCase());
+    return map(item).includes(text.toLowerCase());
   }));
 
-  return [func, state];
+  return {
+    search: func,
+    result: state,
+  };
 }
 
 export function useModal() {
@@ -58,7 +72,7 @@ export function useModal() {
     }
   }, []);
 
-  function modal(action?: string | ((HTMLDivElement) => JSX.Element), callback: any = undefined) {
+  function modal(action?: string | ((_: HTMLElement) => JSX.Element), callback: any = undefined) {
     const jqElement= $("#use-modal");
 
     if (!action) {
@@ -105,14 +119,6 @@ export function Icon(props: IconProps) {
 export function Sticky(props: StickyProps) {
   const ref = React.useRef<HTMLElement>();
 
-  async function onScrollHandler(container: HTMLElement, target: HTMLElement) {
-    target.style.transform = `translateY(${container.scrollTop}px)`;
-
-    if (props.onScroll) {
-      props.onScroll(container.scrollTop, target);
-    }
-  }
-
   React.useEffect(() => {
     if (ref.current) {
       const target = ref.current;
@@ -133,8 +139,8 @@ export function Sticky(props: StickyProps) {
 
       target.style.height = `${container.clientHeight}px`;
 
-      const resizeObserver = new ResizeObserver(entries => {
-          target.style.height = `${container.clientHeight}px`;
+      const resizeObserver = new ResizeObserver(() => {
+          target.style.height = `${container?.clientHeight}px`;
       });
 
       resizeObserver.observe(container);
@@ -146,11 +152,10 @@ export function Sticky(props: StickyProps) {
     }
   }, [ref]);
 
-  const children = {...props.children};
-  children.ref = ref;
-  children.props.className += " sticky-top";
-
-  return children;
+  return React.createElement(props.children.type, {
+    ...props.children.props,
+    ref: ref,
+  }, props.children.props.children);
 }
 
 export function ActivityComponent(props: ActivityComponentProps) {
@@ -165,8 +170,8 @@ export function ActivityComponent(props: ActivityComponentProps) {
         return (
           <React.Fragment>
             <span>{t("activityBody.createdBoard")}</span>
-            <Link to={`/board/${board.id}`}>
-              <b> {board.name}</b>
+            <Link to={`/board/${board?.id}`}>
+              <b> {board?.name}</b>
             </Link>
           </React.Fragment>
         );
@@ -178,7 +183,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
         return (
           <React.Fragment>
             <span>{t("activityBody.createdList")}</span>
-            <b> {list.name}</b>
+            <b> {list?.name}</b>
           </React.Fragment>
         );
       } break;
@@ -189,9 +194,9 @@ export function ActivityComponent(props: ActivityComponentProps) {
         return (
           <React.Fragment>
             <span>{t("activityBody.createdBoard")}</span>
-            <b> {card.name}</b>
+            <b> {card?.name}</b>
             <span> {t("activityBody.on")}</span>
-            <b> {card.list.name}</b>
+            <b> {card?.list.name}</b>
           </React.Fragment>
         );
       } break;
@@ -204,7 +209,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <span>{t("activityBody.renamedBoard")}</span>
             <b> {data.oldName}</b>
             <span> {t("activityBody.to")}</span>
-            <Link to={`/board/${board.id}`}>
+            <Link to={`/board/${board?.id}`}>
               <b> {data.newName}</b>
             </Link>
           </React.Fragment>
@@ -243,9 +248,9 @@ export function ActivityComponent(props: ActivityComponentProps) {
         return (
           <React.Fragment>
             <span>{t("activityBody.movedCard")}</span>
-            <b> {card.name}</b>
+            <b> {card?.name}</b>
             <span> {t("activityBody.to")}</span>
-            <b> {card.list.name}</b>
+            <b> {card?.list.name}</b>
           </React.Fragment>
         );
       } break;
@@ -274,8 +279,8 @@ export function ActivityComponent(props: ActivityComponentProps) {
         </span>
         <Link
           className="ml-3"
-          to={`board/${activity.board.id}`}>
-          <b>{activity.board.name}</b>
+          to={`/board/${activity.board?.id}`}>
+          <b>{activity.board?.name}</b>
         </Link>
         <span className="ml-3">
           {moment(activity.createdAt).fromNow()}
@@ -288,10 +293,10 @@ export function ActivityComponent(props: ActivityComponentProps) {
         <div className="mb-2 text-muted">
           <span><b>{activity.user.username}</b></span>
           <span> { t("activityBody.on")} </span>
-          <Link to={`/board/${activity.board.id}`}>
-            <b>{activity.board.name}</b>
+          <Link to={`/board/${activity.board?.id}`}>
+            <b>{activity.board?.name}</b>
           </Link>
-          {activity.board.team &&
+          {activity.board?.team &&
             <small className="ml-2">
               {activity.board.team.name}
             </small>

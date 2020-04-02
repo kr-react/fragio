@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Redirect, useHistory } from "react-router-dom";
+import { Redirect, useHistory, RouteComponentProps } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
-import { ApplicationState, QueryString, FragioAPI } from "~/src/common";
+import { ApplicationState, QueryString, FragioAPI } from "../../../src/common";
 
 function getTokenFromStorage() {
   const localToken = localStorage.getItem("token");
@@ -21,9 +21,9 @@ function getTokenFromStorage() {
   };
 }
 
-export default function LoginRoute({ match }) {
+export default function LoginRoute({ match }: RouteComponentProps<never>) {
   const token = getTokenFromStorage();
-  const api = new FragioAPI(process.env.API_URL, token.token);
+  const api = new FragioAPI(process.env.API_URL as string, token.token as string);
   const qString = new QueryString(location.href);
   const globalState = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispatch = useDispatch();
@@ -32,7 +32,7 @@ export default function LoginRoute({ match }) {
   const [state, setState] = React.useState(0);
 
   React.useEffect(() => {
-    if (token.token) {
+    if (token.token && token.storage) {
       login(token.storage).catch(() => {
         localStorage.clear();
         sessionStorage.clear();
@@ -40,7 +40,7 @@ export default function LoginRoute({ match }) {
     }
   }, []);
 
-  async function login(storage) {
+  async function login(storage: string) {
     return api.getCurrentUser()
       .then(user => {
         dispatch({
@@ -60,9 +60,9 @@ export default function LoginRoute({ match }) {
       const data = new FormData(e.currentTarget);
 
       try {
-        const info = await api.getToken(data.get("username"), data.get("password"));
+        const token = await api.getToken(data.get("username") as string, data.get("password") as string);
         const remember = data.get("remember-me") == "remember";
-        api.token = info.token;
+        api.token = token;
         await login(remember ? "local" : "session");
       } catch (err) {
         return false;
@@ -74,29 +74,29 @@ export default function LoginRoute({ match }) {
         <div className="form-group">
           <label
             className=""
-            for="username">
+            htmlFor="username">
             {t("username")}
           </label>
           <input
             id="username"
             name="username"
             className="form-control form-control-sm"
-            autofocus
-            autocomplete="username"
+            autoFocus
+            autoComplete="username"
             required
             type="text"/>
         </div>
         <div className="form-group">
           <label
             className=""
-            for="password">
+            htmlFor="password">
             {t("password")}
           </label>
           <input
             id="password"
             name="password"
             className="form-control form-control-sm"
-            autocomplete="current-password"
+            autoComplete="current-password"
             required
             type="password"/>
         </div>
@@ -108,7 +108,7 @@ export default function LoginRoute({ match }) {
             type="checkbox"
             value="remember"/>
           <label
-            for="remember">
+            htmlFor="remember">
             {t("action.rememberMe")}
           </label>
         </div>
@@ -125,35 +125,34 @@ export default function LoginRoute({ match }) {
     async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
       const data = new FormData(e.currentTarget);
-      const info = await api.createAccount({
+      api.token = await api.createAccount({
         name: data.get("name"),
         username: data.get("username"),
         email: data.get("email"),
         password: data.get("password")
       });
 
-      api.token = info.token;
       await login("session");
     }
 
     return (
       <form onSubmit={onSubmitHandler}>
         <div className="form-group">
-          <label for="name">
+          <label htmlFor="name">
             {t("name")}
           </label>
           <input
             id="name"
             name="name"
             className="form-control form-control-sm"
-            autofocus
+            autoFocus
             required
-            autocomplete="name"
-            maxlength="100"
+            autoComplete="name"
+            max="100"
             type="text"/>
         </div>
         <div className="form-group">
-          <label for="username">
+          <label htmlFor="username">
             {t("username")}
           </label>
           <input
@@ -161,12 +160,12 @@ export default function LoginRoute({ match }) {
             name="username"
             className="form-control form-control-sm"
             required
-            autocomplete="username"
-            maxlength="100"
+            autoComplete="username"
+            max="100"
             type="text"/>
         </div>
         <div className="form-group">
-          <label for="email">
+          <label htmlFor="email">
             {t("email")}
           </label>
           <input
@@ -174,13 +173,13 @@ export default function LoginRoute({ match }) {
             name="email"
             className="form-control form-control-sm"
             required
-            autocomplete="email"
+            autoComplete="email"
             pattern=".+@.+"
-            maxlength="100"
+            max="100"
             type="email"/>
         </div>
         <div className="form-group">
-          <label for="password">
+          <label htmlFor="password">
             {t("password")}
           </label>
           <input
@@ -188,7 +187,7 @@ export default function LoginRoute({ match }) {
             name="password"
             className="form-control form-control-sm"
             required
-            autocomplete="new-password"
+            autoComplete="new-password"
             pattern=".{8,100}"
             type="password"/>
         </div>
@@ -202,7 +201,7 @@ export default function LoginRoute({ match }) {
   }
 
   if (globalState.user) {
-    const url = qString.get("location") || "/";
+    const url = qString.get<string>("location") || "/";
     return (
       <Redirect to={url}/>
     );

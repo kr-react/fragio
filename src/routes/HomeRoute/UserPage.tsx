@@ -1,11 +1,11 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, Redirect, useHistory } from "react-router-dom";
+import { Link, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   ActivityComponent,
   Footer,
-} from "~/src/components"
+} from "../../../src/components"
 import {
   FragioAPI,
   ApplicationState,
@@ -13,20 +13,28 @@ import {
   Board,
   Team,
   Activity,
-} from "~/src/common";
+} from "../../../src/common";
 
-export default function UserPage({ match }) {
-  const { user, token } = useSelector<ApplicationState>(state => state);
+export default function UserPage({ match }: RouteComponentProps<{username: string}>) {
+  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispath = useDispatch();
   const { t } = useTranslation();
-  const api = new FragioAPI(process.env.API_URL, token);
+  const api = new FragioAPI(process.env.API_URL as string, token as string);
   const [localState, setLocalState] = React.useState<{
     user: User,
     boards: Board[],
     teams: Team[],
     activities: Activity[],
+    selectedTab: number,
+    status: "DONE" | "LOADING" | "ERROR",
+  }>({
+    user: {} as User,
+    boards: [],
+    teams: [],
+    activities: [],
     selectedTab: 0,
-  }>(undefined);
+    status: "LOADING",
+  });
 
   React.useEffect(() => {
     async function request() {
@@ -42,16 +50,20 @@ export default function UserPage({ match }) {
           teams,
           activities,
           selectedTab: 0,
+          status: "DONE"
         });
       } catch (err) {
-        setLocalState(null);
+        setLocalState({
+          ...localState,
+          status: "DONE",
+        });
       }
     }
 
     request();
   }, [match]);
 
-  function canEdit(user: User) {
+  function canEdit(user?: User) {
     if (!user) {
       return false;
     }
@@ -135,7 +147,7 @@ export default function UserPage({ match }) {
   }
 
   function SettingsTab() {
-    let imgUrl = null;
+    let imgUrl = "";
 
     React.useEffect(() => {
       return () => {
@@ -147,14 +159,14 @@ export default function UserPage({ match }) {
       e.preventDefault();
 
       const data = new FormData(e.currentTarget);
-      const imageFile = data.get("image") || null;
+      const imageFile = data.get("image") as File || null;
       const name = data.get("name") || null;
       const username = data.get("username") || null;
       const email = data.get("email") || null;
 
-      var imageUrl = user.imageUrl;
+      var imageUrl = user?.imageUrl;
 
-      if (imageFile) {
+      if (imageFile && user) {
         var imageFormData = new FormData();
         imageFormData.append("files", imageFile, imageFile.name);
 
@@ -198,19 +210,21 @@ export default function UserPage({ match }) {
 
     function fileInputHandler(e: React.FormEvent<HTMLInputElement>) {
       const input = e.currentTarget;
-      const img = input.parentElement.querySelector("img");
-      const file = input.files[0];
+      const img = (input.parentElement as HTMLLabelElement).querySelector("img") as HTMLImageElement;
+      const file = input.files ? input.files[0] : null;
+      
+      if (file) {
+        if (file.size > 200000) {
+          return;
+        }
 
-      if (file.size > 200000) {
-        return;
+        if (imgUrl) {
+          URL.revokeObjectURL(imgUrl);
+        }
+
+        imgUrl = URL.createObjectURL(file);
+        img.src = imgUrl;
       }
-
-      if (imgUrl) {
-        URL.revokeObjectURL(imgUrl);
-      }
-
-      imgUrl = URL.createObjectURL(file);
-      img.src = imgUrl;
     }
 
     return (
@@ -231,7 +245,7 @@ export default function UserPage({ match }) {
                 className="d-none"/>
             </label>
             <div className="col form-group ml-3">
-              <label for="nameInput">{t("name")}</label>
+              <label htmlFor="nameInput">{t("name")}</label>
               <input
                 type="text"
                 id="nameInput"
@@ -248,7 +262,7 @@ export default function UserPage({ match }) {
             </div>
           </div>
           <div className="form-group">
-            <label for="usernameInput">{t("username")}</label>
+            <label htmlFor="usernameInput">{t("username")}</label>
             <input
               type="text"
               id="usernameInput"
@@ -264,7 +278,7 @@ export default function UserPage({ match }) {
             </small>
           </div>
           <div className="form-group">
-            <label for="emailInput">{t("email")}</label>
+            <label htmlFor="emailInput">{t("email")}</label>
             <input
               type="text"
               id="emailInput"
@@ -293,25 +307,25 @@ export default function UserPage({ match }) {
           className="p-3"
           onSubmit={passwordFormSubmitHandler}>
           <div className="form-group">
-            <label for="usernameInput">{t("currentPassword")}</label>
+            <label htmlFor="usernameInput">{t("currentPassword")}</label>
             <input
               type="password"
               id="currentPasswordInput"
               name="currentPassword"
               pattern=".{8,100}"
               required
-              autocomplete="current-password"
+              autoComplete="current-password"
               className="form-control form-control-sm"/>
           </div>
           <div className="form-group">
-            <label for="passwordInput">{t("password")}</label>
+            <label htmlFor="passwordInput">{t("password")}</label>
             <input
               type="password"
               id="passwordInput"
               name="password"
               pattern=".{8,100}"
               required
-              autocomplete="new-password"
+              autoComplete="new-password"
               className="form-control form-control-sm"/>
           </div>
           <button
@@ -343,7 +357,7 @@ export default function UserPage({ match }) {
                 src={localState.user.imageUrl}/>
               <div className="card-body">
                 <h5 className="card-title">{localState.user.name}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">{localState.user.username}</h6>
+                <h6 className="card-subtitle mb-2 text-muted">{localState.user.username}</h6>
               </div>
             </div>
            </div>

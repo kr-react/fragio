@@ -1,41 +1,49 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { Redirect, useHistory } from "react-router-dom";
+import { Redirect, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   ApplicationState,
-  User,
   Team,
-  Board,
   FragioAPI,
-} from "~/src/common";
+} from "../../../src/common";
 
-export default function NewBoardPage({ match }) {
+export default function NewBoardPage({ match }: RouteComponentProps<never>) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
-  const api = new FragioAPI(process.env.API_URL, token);
+  const api = new FragioAPI(process.env.API_URL as string, token as string);
   const history = useHistory();
   const { t } = useTranslation();
   const [localState, setLocalState] = React.useState<{
     teams: Team[],
-  }>(undefined);
+    status: "DONE" | "LOADING" | "ERROR"
+  }>({
+    teams: [],
+    status: "LOADING"
+  });
 
   if (!user) {
     return <Redirect to="/landing"/>
   }
 
   React.useEffect(() => {
+    document.title = t("pageTitle.newBoard", {name: process.env.APP_NAME});
+
     async function request() {
       try {
-        const teams = await api.getTeamsFromUser(user.username);
-
-        document.title = t("pageTitle.newBoard", {name: process.env.APP_NAME});
-
-        setLocalState({
-          teams,
-        });
-
+        if (user) {
+          const teams = await api.getTeamsFromUser(user.username);
+          setLocalState({
+            teams,
+            status: "DONE"
+          });
+        } else {
+          throw "User is undefined";
+        }
       } catch(err) {
-        setLocalState(null);
+        setLocalState({
+          ...localState,
+          status: "ERROR"
+        });
       }
     }
 
@@ -48,7 +56,7 @@ export default function NewBoardPage({ match }) {
 
     api.createBoard({
       name: data.get("name"),
-      isPrivate: data.get("isPrivate") == 1,
+      isPrivate: data.get("isPrivate") == "1",
       teamId: data.get("teamId") || null
     }).then(board => {
       history.push(`/board/${board.id}`);
@@ -69,7 +77,7 @@ export default function NewBoardPage({ match }) {
     <div className="container-fluid h-100 bg-light">
       <div className="container h-100 py-4 bg-white border-left border-right">
         <h5>{t("action.createBoard")}</h5>
-        <small class="text-muted">
+        <small className="text-muted">
           {t("desc.createBoard")}
         </small>
         <hr className="my-3" />
@@ -80,7 +88,7 @@ export default function NewBoardPage({ match }) {
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
-                  for="name">
+                  htmlFor="name">
                   {t("name")}
                 </label>
               </div>
@@ -88,7 +96,7 @@ export default function NewBoardPage({ match }) {
                 name="name"
                 required
                 className="form-control"
-                autofocus
+                autoFocus
                 type="text"
                 aria-describedby="name-help"/>
             </div>
@@ -98,7 +106,7 @@ export default function NewBoardPage({ match }) {
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
-                  for="select">
+                  htmlFor="select">
                   {t("team")}
                 </label>
               </div>
@@ -127,12 +135,12 @@ export default function NewBoardPage({ match }) {
                 value={0}/>
               <label
                 className="form-check-label"
-                for="public-radio">
+                htmlFor="public-radio">
                 {t("public")}
               </label>
               <small
                 id="public-radio-help"
-                class="form-text text-muted mt-0">
+                className="form-text text-muted mt-0">
                 {t("desc.publicBoard")}
               </small>
             </div>
@@ -147,12 +155,12 @@ export default function NewBoardPage({ match }) {
                 aria-describedby="private-radio-help"/>
               <label
                 className="form-check-label"
-                for="private-radio">
+                htmlFor="private-radio">
                 {t("private")}
               </label>
               <small
                 id="private-radio-help"
-                class="form-text text-muted mt-0">
+                className="form-text text-muted mt-0">
                 {t("desc.privateBoard")}
               </small>
             </div>

@@ -17,7 +17,7 @@ export class QueryString {
     this.baseurl = split[0];
     if (split.length > 1) {
       const params = split[1];
-      const queries = params.match(/([\w\d]+(?:=([^&=]+))?)+/g);
+      const queries = params.match(/([\w\d]+(?:=([^&=]+))?)+/g) ?? [];
       for (let query of queries) {
         const pair = query.split("=");
         const key = pair[0];
@@ -32,7 +32,7 @@ export class QueryString {
     }
   }
 
-  url(): string {
+  url() : string {
     let result = this.baseurl + '?';
     for (let key in this.obj) {
       result += key;
@@ -44,18 +44,19 @@ export class QueryString {
     return result.substr(0, result.length - 1);
   }
 
-  get<T>(key: string): T {
+  get<T>(key: string) : T | null {
     if (key in this.obj) {
       return this.obj[key] as T;
     }
-    return undefined;
+
+    return null;
   }
 
-  set(key: string, value: string | number | boolean) {
+  set(key: string, value: string | number | boolean) : void {
     this.obj[key] = value;
   }
 
-  includes(key: string): boolean {
+  includes(key: string) : boolean {
     return key in this.obj;
   }
 }
@@ -71,6 +72,7 @@ export interface User {
 
 export interface Team {
   id: string;
+  owner: User;
   ownerId: string;
   name: string;
   imageUrl: string;
@@ -143,10 +145,11 @@ export interface Activity {
   board?: Board;
   list?: List;
   card?: Card;
+  data: any;
 }
 
 interface ApiRequestOptions {
-  method: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   useToken?: boolean;
   isFormData?: boolean;
   body?: any;
@@ -162,7 +165,7 @@ export class FragioAPI {
   }
 
   async request<T>(endpoint: string, options: ApiRequestOptions) : Promise<T> {
-    var headers = {};
+    var headers: any = {};
 
     if (options.useToken && this.token) {
         headers["Authorization"] = `Bearer ${this.token}`;

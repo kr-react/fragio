@@ -1,15 +1,13 @@
 import * as React from "react";
-import * as moment from "moment";
 import { useSelector } from "react-redux";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
-  AsyncComponent,
   ActivityComponent,
   Footer,
   useSearch,
   useModal,
-} from "~/src/components";
+} from "../../../src/components";
 import {
   FragioAPI,
   ApplicationState,
@@ -18,12 +16,12 @@ import {
   Board,
   User,
   Activity
-} from "~/src/common";
+} from "../../../src/common";
 
-export default function TeamPage({ match }) {
+export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
   const { t } = useTranslation();
-  const { user, token } = useSelector<ApplicationState>(state => state);
-  const api = new FragioAPI(process.env.API_URL, token);
+  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
+  const api = new FragioAPI(process.env.API_URL as string, token as string);
   const modal = useModal();
   const history = useHistory();
   const [localState, setLocalState] = React.useState<{
@@ -31,8 +29,16 @@ export default function TeamPage({ match }) {
     boards: Board[],
     members: Member[],
     activities: Activity[],
-    selectedTab: number
-  }>(undefined);
+    selectedTab: number,
+    status: "DONE" | "LOADING" | "ERROR"
+  }>({
+    team: {} as Team,
+    boards: [],
+    members: [],
+    activities: [],
+    selectedTab: 0,
+    status: "LOADING",
+  });
 
   React.useEffect(() => {
     async function request() {
@@ -49,17 +55,21 @@ export default function TeamPage({ match }) {
           members,
           boards,
           activities,
-          selectedTab: 0
+          selectedTab: 0,
+          status: "DONE"
         });
       } catch (err) {
-        setLocalState(null);
+        setLocalState({
+          ...localState,
+          status: "ERROR"
+        });
       }
     }
 
     request();
   }, []);
 
-  function isOwner(u: User) {
+  function isOwner(u?: User) {
     return u && u.id == localState.team.owner.id;
   }
 
@@ -101,13 +111,13 @@ export default function TeamPage({ match }) {
   }
 
   function ActivitiesTab() {
-    const [search, activities] = useSearch(localState.activities, a => `${a.user.name} ${a.user.username}`);
+    const {search, result} = useSearch(localState.activities, a => `${a.user.name} ${a.user.username}`);
 
     return (
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{t("activityCount", {count: activities.length})}</b>
+            <b className="text-nowrap">{t("activityCount", {count: result.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
                 <span className="input-group-text">{t("action.search")}</span>
@@ -121,7 +131,7 @@ export default function TeamPage({ match }) {
             </div>
           </div>
           <ul className="list-group list-group-flush">
-            {activities.map(activity =>
+            {result.map(activity =>
               <ActivityComponent
                 as={"li"}
                 className="list-group-item"
@@ -135,8 +145,8 @@ export default function TeamPage({ match }) {
   }
 
   function BoardsTab() {
-    const [search, boards] = useSearch(localState.boards, a => a.name);
-    const [userBoards, setUserBoards] = React.useState([]);
+    const {search, result} = useSearch(localState.boards, a => a.name);
+    const [userBoards, setUserBoards] = React.useState<Board[]>([]);
 
     React.useEffect(() => {
       if (!user)
@@ -152,7 +162,7 @@ export default function TeamPage({ match }) {
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{t("boardCount", {count: boards.length})}</b>
+            <b className="text-nowrap">{t("boardCount", {count: result.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
                 <span className="input-group-text">{t("action.search")}</span>
@@ -205,7 +215,7 @@ export default function TeamPage({ match }) {
             }
           </div>
           <ul className="list-group list-group-flush">
-            {boards.map(board =>
+            {result.map(board =>
               <li className="list-group-item d-flex justify-content-between align-items-center">
                 <Link to={`/board/${board.id}`}>
                   {board.name}
@@ -226,7 +236,7 @@ export default function TeamPage({ match }) {
   }
 
   function MembersTab() {
-    const [search, members] = useSearch(localState.members, a => a.user.name);
+    const {search, result} = useSearch(localState.members, a => a.user.name);
 
     function MembersModal() {
       return (
@@ -236,7 +246,7 @@ export default function TeamPage({ match }) {
           onSubmit={e => {
             e.preventDefault();
             const data = new FormData(e.currentTarget);
-            createMember(data.get("username")).then(() => modal());
+            createMember(data.get("username") as string).then(() => modal());
           }}>
           <div className="modal-header">
             <h6 className="modal-title">
@@ -254,7 +264,7 @@ export default function TeamPage({ match }) {
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
-                  for="username">
+                  htmlFor="username">
                   {t("username")}
                 </label>
               </div>
@@ -262,7 +272,7 @@ export default function TeamPage({ match }) {
                 name="username"
                 required
                 className="form-control"
-                autofocus
+                autoFocus
                 type="text"/>
             </div>
           </div>
@@ -270,7 +280,7 @@ export default function TeamPage({ match }) {
             <input
               type="submit"
               className="btn btn-primary btn-sm"
-              value={t("action.add")}/>
+              value={t("action.add") as string}/>
           </div>
         </form>
       );
@@ -280,7 +290,7 @@ export default function TeamPage({ match }) {
       <React.Fragment>
         <div className="card">
           <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-            <b className="text-nowrap">{t("memberCount", {count: members.length})}</b>
+            <b className="text-nowrap">{t("memberCount", {count: result.length})}</b>
             <div className="input-group input-group-sm ml-4">
               <div className="input-group-prepend">
                 <span className="input-group-text">{t("action.search")}</span>
@@ -301,7 +311,7 @@ export default function TeamPage({ match }) {
             }
           </div>
           <ul className="list-group list-group-flush">
-            {members.map(member =>
+            {result.map(member =>
               <li className="list-group-item d-flex justify-content-between align-items-center">
                 <span className="d-flex flex-row align-items-center">
                   <Link
@@ -364,7 +374,7 @@ export default function TeamPage({ match }) {
         <form onSubmit={onSubmitHandler}>
           <div className="form-group">
             <label
-              for="rename-input">
+              htmlFor="rename-input">
               {t("name")}
             </label>
             <input

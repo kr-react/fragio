@@ -1,8 +1,8 @@
 import * as React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Link, Redirect, useHistory } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link, Redirect, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Sticky, ActivityComponent } from "~/src/components";
+import { Sticky, ActivityComponent } from "../../../src/components";
 import {
   ApplicationState,
   Board,
@@ -10,20 +10,26 @@ import {
   HistoryEntry,
   Activity,
   FragioAPI,
-} from "~/src/common";
+} from "../../../src/common";
 
-export default function HomePage({ match }) {
+export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
-  const api = new FragioAPI(process.env.API_URL, token);
+  const api = new FragioAPI(process.env.API_URL as string, token as string);
   const history = useHistory();
-  const dispatch = useDispatch();
   const { t } = useTranslation();
   const [localState, setLocalState] = React.useState<{
     boards: Board[],
     teams: Team[],
     history: HistoryEntry[],
     activities: Activity[],
-  }>(undefined);
+    status: "DONE" | "LOADING" | "ERROR"
+  }>({
+    boards: [],
+    teams: [],
+    history: [],
+    activities: [],
+    status: "LOADING",
+  });
   const [searchState, setSearchState] = React.useState({
     board: "",
     team: ""
@@ -32,19 +38,27 @@ export default function HomePage({ match }) {
   React.useEffect(() => {
     async function request() {
       try {
-        const boards = await api.getBoardsFromUser(user.username);
-        const teams = await api.getTeamsFromUser(user.username);
-        const history = await api.getHistoryFromUser(user.username);
-        const activities = await api.getActivitiesFromUser(user.username);
-
-        setLocalState({
-          boards,
-          teams,
-          history,
-          activities
-        });
+        if (user) {
+          const boards = await api.getBoardsFromUser(user.username);
+          const teams = await api.getTeamsFromUser(user.username);
+          const history = await api.getHistoryFromUser(user.username);
+          const activities = await api.getActivitiesFromUser(user.username);
+          
+          setLocalState({
+            boards,
+            teams,
+            history,
+            activities,
+            status: "DONE",
+          });
+        } else {
+          throw "User is undefined";
+        }
       } catch (err) {
-        setLocalState(null);
+        setLocalState({
+          ...localState,
+          status: "ERROR",
+        });
       }
     }
 
@@ -56,42 +70,15 @@ export default function HomePage({ match }) {
     return <Redirect to="/landing"/>
   }
 
-  function createBoard(name: string) {
-    api.createBoard({
-      name
-    }).then(board => {
-      setLocalState({
-        ...localState,
-        boards: boards.concat([board])
-      });
-    });
-  }
-
-  function createTeam(name: string) {
-    api.createTeam({
-      name
-    }).then(team => {
-      setLocalState({
-        ...localState,
-        teams: teams.concat([team])
-      });
-    });
-  }
-
-  function getLastTimeOpen(boardId: string) {
-    const h = localState.history.find(h => h.boardId == boardId);
-    return h ? new Date(h.createdAt).toLocaleString() : "Never";
-  }
-
   function includesIgnoreCase(str1: string, str2: string) {
     return str1.toUpperCase().includes(str2.toUpperCase());
   }
 
-  if (localState === undefined) {
+  if (localState.status == "LOADING") {
     return (
       <span>Loading</span>
     );
-  } else if (localState === null) {
+  } else if (localState.status == "ERROR") {
     return (
       <span>Error</span>
     );

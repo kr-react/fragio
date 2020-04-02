@@ -1,19 +1,19 @@
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, Redirect, Switch, Route } from "react-router-dom";
+import { Link, Redirect, Switch, Route, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { ApplicationState } from "~/src/common";
-import HomePage from "./HomePage.tsx";
-import BoardPage from "./BoardPage.tsx";
-import TeamPage from "./TeamPage.tsx";
-import UserPage from "./UserPage.tsx";
-import NewBoardPage from "./NewBoardPage.tsx";
-import NewTeamPage from "./NewTeamPage.tsx";
-import LandingPage from "./LandingPage.tsx";
+import { ApplicationState } from "../../../src/common";
+import HomePage from "./HomePage";
+import BoardPage from "./BoardPage";
+import TeamPage from "./TeamPage";
+import UserPage from "./UserPage";
+import NewBoardPage from "./NewBoardPage";
+import NewTeamPage from "./NewTeamPage";
+import LandingPage from "./LandingPage";
 
-export default function HomeRoute({ match }) {
+export default function HomeRoute({ match }: RouteComponentProps<never>) {
   const { t } = useTranslation();
-  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
+  const { user } = useSelector<ApplicationState, ApplicationState>(state => state);
   const dispatch = useDispatch();
 
   if (!user && (localStorage.getItem("token") || sessionStorage.getItem("token"))) {
@@ -57,7 +57,7 @@ export default function HomeRoute({ match }) {
                   to={`/user/${user.username}`}>
                   {t("profile")}
                 </Link>
-                <div class="dropdown-divider"></div>
+                <div className="dropdown-divider"></div>
                 <span
                   className="dropdown-item pointer"
                   onClick={() => dispatch({ type: "LOGOUT" })}>

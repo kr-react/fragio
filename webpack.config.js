@@ -8,11 +8,8 @@ module.exports = {
   devtool: "source-map",
   watch: false,
   watchOptions: {
-    aggregateTimeout: 600,
+    aggregateTimeout: 500,
     ignored: ["node_modules"]
-  },
-  output: {
-    pathinfo: false
   },
   optimization: {
     usedExports: true
@@ -35,10 +32,6 @@ module.exports = {
         use: [
           {
             loader: "ts-loader",
-            options: {
-              transpileOnly: true,
-              experimentalWatchApi: true,
-            },
           }
         ]
       },

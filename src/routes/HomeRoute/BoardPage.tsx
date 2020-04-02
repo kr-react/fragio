@@ -1,6 +1,5 @@
 import * as React from "react";
-import * as $ from "jquery";
-import { useHistory } from "react-router-dom";
+import { useHistory, RouteComponentProps } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { useDrag, useDrop, DndProvider } from "react-dnd";
@@ -11,7 +10,7 @@ import {
   ActivityComponent,
   Icon,
   Footer,
-} from "~/src/components";
+} from "../../components";
 import {
   FragioAPI,
   ApplicationState,
@@ -19,7 +18,10 @@ import {
   List,
   Card,
   Activity,
-} from "~/src/common";
+  Label,
+  Team,
+  User,
+} from "../../common";
 
 interface BoardComponentProps {
   className?: string;
@@ -37,7 +39,7 @@ interface BoardComponentProps {
   onListDelete: (list: List) => void;
 }
 
-function getClosestElementIndex(x1: number, y1: number, elems: HTMLElement[]) {
+function getClosestElementIndex(x1: number, y1: number, elems: ArrayLike<Element>) : number {
   let [index, dist] = [0, Number.MAX_VALUE];
 
   for (let i = 0; i < elems.length; i++) {
@@ -73,20 +75,21 @@ function getImagesFromString(str: string) {
 
 function BoardComponent(boardProps: BoardComponentProps) {
   const { board, lists, cards } = boardProps;
-  const modal = useModal();
   const { t } = useTranslation();
-  const [boardDropProps, boardDropRef] = useDrop({
+  const [_, boardDropRef] = useDrop<{type: string, list: List}, any, any>({
     accept: ["list"],
     options: {
-      arePropsEqual: (a, b) => a.list.id == b.list.id,
+      arePropsEqual: (a: { list: List}, b: {list: List}) => a.list.id == b.list.id,
     },
     drop: (item, monitor) => {
       if (!boardProps.editable)
         return;
 
-      const { x, y } = monitor.getClientOffset();
+      const { x, y } = monitor.getClientOffset() ?? { x: 0, y: 0 };
       const elem = document.querySelector(`#board-${board.id}`);
-      const children = elem.querySelectorAll(":scope > div[draggable='true']") || [];
+      const children = elem?.querySelectorAll(":scope > div[draggable='true']");
+
+      if (!children) return;
 
       boardProps.onListUpdate({...item.list}, {
         position: getClosestElementIndex(x, y, children)
@@ -151,24 +154,25 @@ function BoardComponent(boardProps: BoardComponentProps) {
         opacity: monitor.isDragging() ? 0.5 : 1.0,
       }),
     });
-    const [listDropProps, listDropRef] = useDrop({
+    const [_, listDropRef] = useDrop<{type: "string", card: Card}, any, any>({
       accept: ["card"],
       options: {
-        arePropsEqual: (a, b) => a.card.id == b.card.id,
+        arePropsEqual: (a: {card: Card}, b: {card: Card}) => a.card.id == b.card.id,
       },
       drop: (item, monitor) => {
         if (!boardProps.editable)
           return;
 
-        const { x, y } = monitor.getClientOffset();
+        const { x, y } = monitor.getClientOffset() ?? {x: 0, y: 0};
         const elem = document.querySelector(`#list-${list.id} > .card-body`);
-        const children = elem.querySelector(":scope > div[draggable='true']") || [];
+        const children = elem?.querySelectorAll(":scope > div[draggable='true']");
+
+        if (!children) return;
 
         boardProps.onCardUpdate({...item.card}, {
-          position: getClosestElementIndex(x, y, children),
-          listId: list.id
+          position: getClosestElementIndex(x, y, children)
         });
-      }
+        }
     });
 
     const cards = getCards(list.id);
@@ -236,7 +240,7 @@ function BoardComponent(boardProps: BoardComponentProps) {
                   }}>
                   {t("action.moveRight")}
                 </span>
-                <div class="dropdown-divider"></div>
+                <div className="dropdown-divider"></div>
                 <span
                   className="dropdown-item pointer"
                   onClick={() => boardProps.onListDelete(list)}>
@@ -298,10 +302,6 @@ function BoardComponent(boardProps: BoardComponentProps) {
 
   if (boardProps.as) {
     elem.type = boardProps.as;
-    elem.boardProps = {
-      ...boardProps.as.props,
-      ...elem.props
-    };
   }
 
   if (boardProps.className) {
@@ -311,12 +311,12 @@ function BoardComponent(boardProps: BoardComponentProps) {
   return elem;
 }
 
-export default function BoardPage({ match }) {
-  const { user, token } = useSelector<ApplicationState>(state => state);
-  const modal = useModal();
-  const history = useHistory();
-  const api = new FragioAPI(process.env.API_URL, token);
+export default function BoardPage({ match }: RouteComponentProps<{id: string}>) {
+  const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const { t } = useTranslation();
+  const history = useHistory();
+  const modal = useModal();
+  const api = new FragioAPI(process.env.API_URL as string, token as string);
   const [localState, setLocalState] = React.useState<{
     board: Board,
     lists: List[],
@@ -325,7 +325,17 @@ export default function BoardPage({ match }) {
     activities: Activity[],
     selectedTab: number,
     selectedCardIndex: number,
-  }>(undefined);
+    status: "DONE" | "LOADING" | "ERROR"
+  }>({
+    board: {} as Board,
+    lists: [],
+    cards: [],
+    teams: [],
+    activities: [],
+    selectedTab: 0,
+    selectedCardIndex: -1,
+    status: "LOADING"
+  });
 
   React.useEffect(() => {
     async function request() {
@@ -343,10 +353,14 @@ export default function BoardPage({ match }) {
           teams,
           activities,
           selectedTab: 0,
-          selectedCardIndex: undefined,
+          selectedCardIndex: -1,
+          status: "DONE",
         });
       } catch (err) {
-        setLocalState(null);
+        setLocalState({
+          ...localState,
+          status: "ERROR",
+        });
       }
     }
 
@@ -358,7 +372,7 @@ export default function BoardPage({ match }) {
 
     const index = localState.selectedCardIndex;
 
-    if (!isNaN(index)) {
+    if (index >= 0) {
       modal(() =>
         <CardModal
           card={localState.cards[index]}
@@ -380,7 +394,7 @@ export default function BoardPage({ match }) {
 
     React.useEffect(() => {
       setTimeout(() => {
-        const target = document.querySelector("#use-modal textarea");
+        const target = document.querySelector("#use-modal textarea") as HTMLElement;
         resizeToScroll(target);
       }, 200);
     }, []);
@@ -432,7 +446,7 @@ export default function BoardPage({ match }) {
             {editable &&
               <div className="dropdown">
                 <button
-                  class="btn btn-secondary btn-sm dropdown-toggle mr-2 mb-2"
+                  className="btn btn-secondary btn-sm dropdown-toggle mr-2 mb-2"
                   id="labels-dropdown"
                   data-toggle="dropdown"
                   aria-haspopup="true"
@@ -492,16 +506,19 @@ export default function BoardPage({ match }) {
     );
   }
 
-  function canEdit(u: User) {
+  function canEdit(u?: User) : boolean {
     const { board, teams } = localState;
 
     if (u && u.id == board.ownerId)
       return true;
 
-    return board.team && teams.some(team => team.id == board.team.id);
+    if (!board.team)
+      return false;
+
+    return teams.some(team => team.id == board.team?.id);
   }
 
-  function isOwner(u: User) {
+  function isOwner(u?: User) {
     return u && u.id == localState.board.owner.id;
   }
 
@@ -509,12 +526,12 @@ export default function BoardPage({ match }) {
     setLocalState({
       ...localState,
       selectedTab: index,
-      selectedCardIndex: undefined,
+      selectedCardIndex: -1,
     });
   }
 
-  function selectCard(card: Card) {
-    const index = card ? localState.cards.findIndex(c => c.id === card.id) : undefined;
+  function selectCard(card?: Card) {
+    const index = card ? localState.cards.findIndex(c => c.id === card.id) : -1;
 
     setLocalState({
       ...localState,
@@ -605,7 +622,7 @@ export default function BoardPage({ match }) {
         setLocalState({
           ...localState,
           cards: localState.cards.filter(c => c.id != card.id),
-          selectedCardIndex: card.id == selectedCard.id ? undefined : localState.selectedCardIndex,
+          selectedCardIndex: card.id == selectedCard.id ? -1 : localState.selectedCardIndex,
         });
       });
   }
@@ -708,12 +725,12 @@ export default function BoardPage({ match }) {
   }
 
   function ActivitiesTab() {
-    const [search, activities] = useSearch(localState.activities, a => a.user.name.toLowerCase());
+    const {search, result} = useSearch(localState.activities, a => a.user.name.toLowerCase());
 
     return (
       <div className="card">
         <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-          <b className="text-nowrap">{t("activityCount", {count: activities.length})}</b>
+          <b className="text-nowrap">{t("activityCount", {count: result.length})}</b>
           <div className="input-group input-group-sm ml-4">
             <div className="input-group-prepend">
               <span className="input-group-text">{t("action.search")}</span>
@@ -727,7 +744,7 @@ export default function BoardPage({ match }) {
           </div>
         </div>
         <ul className="list-group list-group-flush">
-          {activities.map(activity =>
+          {result.map(activity =>
             <ActivityComponent
               as={"li"}
               className="list-group-item"
@@ -740,7 +757,7 @@ export default function BoardPage({ match }) {
   }
 
   function LabelsTab() {
-    const [search, labels] = useSearch(localState.board.labels, a => a.name.toLowerCase());
+    const {search, result} = useSearch(localState.board.labels, a => a.name.toLowerCase());
 
     function randomNumber(min:number, max: number) {
       return Math.floor(Math.random() * (max - min) + min);
@@ -787,7 +804,7 @@ export default function BoardPage({ match }) {
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
-                  for="name">
+                  htmlFor="name">
                   {t("name")}
                 </label>
               </div>
@@ -795,14 +812,14 @@ export default function BoardPage({ match }) {
                 name="name"
                 required
                 className="form-control"
-                autofocus
+                autoFocus
                 type="text"/>
             </div>
             <div className="form-group input-group">
               <div className="input-group-prepend">
                 <label
                   className="input-group-text"
-                  for="color">
+                  htmlFor="color">
                   <div
                     className="rounded-circle"
                     style={{
@@ -813,7 +830,7 @@ export default function BoardPage({ match }) {
                 </label>
                 <label
                   className="input-group-text"
-                  for="color">
+                  htmlFor="color">
                   {"#"}
                 </label>
               </div>
@@ -840,7 +857,7 @@ export default function BoardPage({ match }) {
     return (
       <div className="card">
         <div className="card-header d-flex flex-row justify-content-between align-items-center sticky-top bg-light">
-          <b className="text-nowrap">{t("labelCount", {count: labels.length})}</b>
+          <b className="text-nowrap">{t("labelCount", {count: result.length})}</b>
           <div className="input-group input-group-sm ml-4">
             <div className="input-group-prepend">
               <span className="input-group-text">{t("action.search")}</span>
@@ -861,7 +878,7 @@ export default function BoardPage({ match }) {
           }
         </div>
         <ul className="list-group list-group-flush">
-          {labels.map(label =>
+          {result.map(label =>
             <div className="list-group-item d-flex align-items-center">
               <div
                 className="rounded-circle mr-3"
@@ -883,7 +900,7 @@ export default function BoardPage({ match }) {
                           ...localState,
                           board: {
                             ...localState.board,
-                            labels: labels.filter(l => l.id != label.id)
+                            labels: result.filter(l => l.id != label.id)
                           },
                         });
                       });
@@ -905,7 +922,7 @@ export default function BoardPage({ match }) {
 
       api.updateBoard(localState.board.id, {
         name: data.get("name"),
-        isPrivate: data.get("isPrivate") == 1
+        isPrivate: data.get("isPrivate") == "1"
       }).then(board => {
         setLocalState({
           ...localState,
@@ -927,7 +944,7 @@ export default function BoardPage({ match }) {
         <form onSubmit={onSubmitHandler}>
           <div className="form-group">
             <label
-              for="rename-input">
+              htmlFor="rename-input">
               {t("name")}
             </label>
             <input
@@ -948,12 +965,12 @@ export default function BoardPage({ match }) {
                 defaultChecked={!localState.board.isPrivate}/>
               <label
                 className="form-check-label"
-                for="public-radio">
+                htmlFor="public-radio">
                 {t("public")}
               </label>
               <small
                 id="public-radio-help"
-                class="form-text text-muted mt-0">
+                className="form-text text-muted mt-0">
                 {t("desc.publicBoard")}
               </small>
             </div>
@@ -968,12 +985,12 @@ export default function BoardPage({ match }) {
                 aria-describedby="private-radio-help"/>
               <label
                 className="form-check-label"
-                for="private-radio">
+                htmlFor="private-radio">
                 {t("private")}
               </label>
               <small
                 id="private-radio-help"
-                class="form-text text-muted mt-0">
+                className="form-text text-muted mt-0">
                 {t("desc.privateBoard")}
               </small>
             </div>
@@ -996,11 +1013,11 @@ export default function BoardPage({ match }) {
     );
   }
 
-  if (localState === undefined) {
+  if (localState.status == "LOADING") {
     return (
       <span>Loading</span>
     );
-  } else if (localState === null) {
+  } else if (localState.status == "ERROR") {
     return (
       <span>Error</span>
     );
