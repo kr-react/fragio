@@ -217,25 +217,28 @@ export default function LoginRoute({ match }) {
               <div className="card-body px-0">
                 <h5 className="card-title text-center">{process.env.APP_NAME}</h5>
                 <ul className="nav nav-tabs px-2">
-                  {[t("action.login"), t("action.signIn")].map((tab, i) =>
-                    <li
-                      className={`nav-item pointer`}
-                      onClick={() => setState(i)}>
-                      <a
-                        className={`nav-link ${state === i ? ' active' : ''}`}
-                        href="#">
-                        {tab}
-                      </a>
-                    </li>
-                  )}
+                  <li
+                    className={`nav-item pointer`}
+                    onClick={() => setState(0)}>
+                    <a
+                      className={`nav-link ${state === 0 ? ' active' : ''}`}
+                      href="#">
+                      {t("action.login")}
+                    </a>
+                  </li>
+                  <li
+                    className={`nav-item pointer`}
+                    onClick={() => setState(1)}>
+                    <a
+                      className={`nav-link ${state === 1 ? ' active' : ''}`}
+                      href="#">
+                      {t("action.signIn")}
+                    </a>
+                  </li>
                 </ul>
                 <div className="p-3 bg-white border-bottom">
-                  {state === 0 &&
-                    <LoginForm/>
-                  }
-                  {state === 1 &&
-                    <SignUpForm/>
-                  }
+                  {state === 0 && <LoginForm/>}
+                  {state === 1 && <SignUpForm/>}
                 </div>
               </div>
             </div>

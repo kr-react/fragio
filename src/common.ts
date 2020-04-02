@@ -178,9 +178,11 @@ export class FragioAPI {
       body: options.isFormData ? options.body : JSON.stringify(options.body)
     }).then(res => {
       if (res.ok) {
-        if (res.headers.get("Content-Type").includes("json")) {
+        const contentType = res.headers.get("Content-Type");
+
+        if (contentType && contentType.includes("json")) {
           return res.json();
-        } else if (res.headers.has("Content-Type")) {
+        } else if (contentType) {
           return res.text();
         }
 

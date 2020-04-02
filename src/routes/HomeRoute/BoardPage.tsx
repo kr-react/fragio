@@ -375,6 +375,8 @@ export default function BoardPage({ match }) {
 
   function CardModal(props: { card: Card, editable: boolean}) {
     const {card, editable} = props;
+    const labels = getLabels(localState.board.labels, card);
+    const unusedLabels = getUnusedLabels(localState.board.labels, card);
 
     React.useEffect(() => {
       setTimeout(() => {
@@ -410,7 +412,7 @@ export default function BoardPage({ match }) {
         </div>
         <div className="modal-body">
           <div className="d-flex flex-row flex-wrap">
-            {getLabels(localState.board.labels, card).map(label =>
+            {labels.map(label =>
               <button
                 className="btn btn-primary btn-sm mr-2 mb-2 font-weight-bold"
                 onClick={() => {
@@ -440,7 +442,7 @@ export default function BoardPage({ match }) {
                 <div
                   className="dropdown-menu shadow-sm"
                   aria-labelledby="labels-dropdown">
-                  {getUnusedLabels(localState.board.labels, card).map(label =>
+                  {unusedLabels.map(label =>
                     <span
                       className="dropdown-item pointer"
                       onClick={() => {
@@ -453,6 +455,13 @@ export default function BoardPage({ match }) {
                       {label.name}
                     </span>
                   )}
+                  {unusedLabels.length == 0 &&
+                    <div className="text-center text-muted">
+                      <small>
+                        {t("desc.empty")}
+                      </small>
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -596,7 +605,7 @@ export default function BoardPage({ match }) {
         setLocalState({
           ...localState,
           cards: localState.cards.filter(c => c.id != card.id),
-          selectedCard: card.id == selectedCard.id ? undefined : localState.selectedCardIndex,
+          selectedCardIndex: card.id == selectedCard.id ? undefined : localState.selectedCardIndex,
         });
       });
   }
