@@ -170,9 +170,10 @@ function BoardComponent(boardProps: BoardComponentProps) {
         if (!children) return;
 
         boardProps.onCardUpdate({...item.card}, {
-          position: getClosestElementIndex(x, y, children)
+          position: getClosestElementIndex(x, y, children),
+          listId: list.id,
         });
-        }
+      }
     });
 
     const cards = getCards(list.id);
