@@ -136,13 +136,13 @@ export interface HistoryEntry {
 export interface Activity {
   id: string;
   userId: string;
-  boardId?: string;
+  boardId: string;
   listId?: string;
   cardId?: string;
   activityType: number;
   createdAt: string;
   user: User;
-  board?: Board;
+  board: Board;
   list?: List;
   card?: Card;
   data: any;

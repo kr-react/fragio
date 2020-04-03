@@ -108,7 +108,11 @@ export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
   }
 
   function ActivitiesTab() {
-    const {search, result} = useSearch(localState.activities, a => `${a.user.name} ${a.user.username}`);
+    const {search, result} = useSearch(localState.activities, a => [
+      a.user.name,
+      a.user.username,
+      a.board.name
+    ]);
 
     return (
       <React.Fragment>
@@ -142,7 +146,9 @@ export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
   }
 
   function BoardsTab() {
-    const {search, result} = useSearch(localState.boards, a => a.name);
+    const {search, result} = useSearch(localState.boards, b => [
+      b.name,
+    ]);
     const [userBoards, setUserBoards] = React.useState<Board[]>([]);
 
     React.useEffect(() => {
@@ -233,7 +239,11 @@ export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
   }
 
   function MembersTab() {
-    const {search, result} = useSearch(localState.members, a => a.user.name);
+    const {search, result} = useSearch(localState.members, m => [
+      m.team.name,
+      m.user.name,
+      m.user.username,
+    ]);
 
     function MembersModal() {
       return (

@@ -722,7 +722,11 @@ export default function BoardPage({ match }: RouteComponentProps<{id: string}>) 
   }
 
   function ActivitiesTab() {
-    const {search, result} = useSearch(localState.activities, a => a.user.name.toLowerCase());
+    const {search, result} = useSearch(localState.activities, a => [
+      a.user.name,
+      a.user.username,
+      a.board.name
+    ]);
 
     return (
       <div className="card">
@@ -754,7 +758,9 @@ export default function BoardPage({ match }: RouteComponentProps<{id: string}>) 
   }
 
   function LabelsTab() {
-    const {search, result} = useSearch(localState.board.labels, a => a.name.toLowerCase());
+    const {search, result} = useSearch(localState.board.labels, l => [
+      l.name,
+    ]);
 
     function randomNumber(min:number, max: number) {
       return Math.floor(Math.random() * (max - min) + min);

@@ -43,11 +43,28 @@ interface LoadingProps {
   type?: "spinner" | "growing";
 }
 
-export function useSearch<T>(arr: T[], map: (_: T) => string) {
+interface SearchOptions {
+  ignoreCase?: boolean;
+}
+
+export function useSearch<T>(arr: T[], map: (props: T) => string[], options?: SearchOptions) {
   const [state, setState] = React.useState(arr);
-  const func = (text: string) => setState(arr.filter(item => {
-    return map(item).includes(text.toLowerCase());
-  }));
+  const func = (text: string) => setState(filter(text));
+
+  function filter(text: string) {
+    const ignoreCase = options?.ignoreCase ?? true;
+
+    return arr.filter(item => {
+      return map(item).some(value => {
+        if (ignoreCase) {
+          value = value.toLowerCase();
+          text = text.toLowerCase();
+        }
+
+        return value.includes(text);
+      });
+    });
+  }
 
   return {
     search: func,
@@ -123,7 +140,7 @@ export function useSticky<T extends HTMLElement>(count: number) : React.RefObjec
         target.classList.add("sticky-top");
 
         const resizeObserver = new ResizeObserver(() => {
-            target.style.height = `${container?.clientHeight}px`;
+          target.style.height = `${container?.clientHeight}px`;
         });
 
         resizeObserver.observe(container);
