@@ -5,6 +5,7 @@ import * as $ from "jquery";
 import { useTranslation } from 'react-i18next';
 import { Link } from "react-router-dom";
 import { Activity } from "./common";
+import { readFileSync } from "fs";
 
 declare interface ResizeObserverEntry {
   target: Element | SVGElement;
@@ -15,11 +16,6 @@ declare class ResizeObserver {
   observe(target: Element): void;
   unobserve(target: Element): void;
   disconnect(): void;
-}
-
-interface StickyProps {
-  children: JSX.Element;
-  onScroll?: (e: HTMLElement) => void;
 }
 
 interface ActivityComponentProps {
@@ -98,6 +94,54 @@ export function useModal() {
   return modal;
 }
 
+export function useSticky<T extends HTMLElement>(count: number) : React.RefObject<T>[] {
+  const refs = [...Array(count).keys()].map(() => React.createRef<T>());
+  
+  React.useEffect(() => {
+    const observers: ResizeObserver[] = [];
+    
+    for (const ref of refs) {
+      const target = ref.current;
+      
+      if (target) {
+        let container = target.parentElement;
+
+        while (true) {
+          if (!container) return;
+
+          const style = window.getComputedStyle(container);
+          const overflowY = style.getPropertyValue("overflow-y");
+
+          if (overflowY == "scroll" || overflowY == "auto") {
+            break;
+          }
+
+          container = container.parentElement;
+        }
+
+        target.style.height = `${container.clientHeight}px`;
+        target.classList.add("sticky-top");
+
+        const resizeObserver = new ResizeObserver(() => {
+            target.style.height = `${container?.clientHeight}px`;
+        });
+
+        resizeObserver.observe(container);
+        resizeObserver.observe(document.body);
+        observers.push(resizeObserver);
+      }
+    }
+
+    return () => {
+      for (const observer of observers) {
+        observer.disconnect();
+      }
+    };
+  }, [...refs]);
+
+  return refs;
+}
+
 export function Icon(props: IconProps) {
   function HamburgerIcon() {
     return (
@@ -146,48 +190,6 @@ export function Loading(props: LoadingProps) {
       <span className="sr-only">Loading...</span>
     </div>
   );
-}
-
-export function Sticky(props: StickyProps) {
-  const ref = React.useRef<HTMLElement>();
-
-  React.useEffect(() => {
-    if (ref.current) {
-      const target = ref.current;
-      let container = target.parentElement;
-
-      while (true) {
-        if (!container) return;
-
-        const style = window.getComputedStyle(container);
-        const overflowY = style.getPropertyValue("overflow-y");
-
-        if (overflowY == "scroll" || overflowY == "auto") {
-          break;
-        }
-
-        container = container.parentElement;
-      }
-
-      target.style.height = `${container.clientHeight}px`;
-
-      const resizeObserver = new ResizeObserver(() => {
-          target.style.height = `${container?.clientHeight}px`;
-      });
-
-      resizeObserver.observe(container);
-      resizeObserver.observe(document.body);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    }
-  }, [ref]);
-
-  return React.createElement(props.children.type, {
-    ...props.children.props,
-    ref: ref,
-  }, props.children.props.children);
 }
 
 export function ActivityComponent(props: ActivityComponentProps) {
