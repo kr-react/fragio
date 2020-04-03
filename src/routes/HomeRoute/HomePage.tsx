@@ -2,7 +2,7 @@ import * as React from "react";
 import { useSelector } from "react-redux";
 import { Link, Redirect, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Sticky, ActivityComponent } from "../../../src/components";
+import { Sticky, ActivityComponent, Loading } from "../../../src/components";
 import {
   ApplicationState,
   Board,
@@ -76,7 +76,9 @@ export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
 
   if (localState.status == "LOADING") {
     return (
-      <span>Loading</span>
+      <div className="text-center">
+        <Loading className="m-3 text-secondary"/>
+      </div>
     );
   } else if (localState.status == "ERROR") {
     return (

@@ -3,10 +3,11 @@ import { useSelector } from "react-redux";
 import { Link, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityComponent,
-  Footer,
   useSearch,
   useModal,
+  Loading,
+  ActivityComponent,
+  Footer,
 } from "../../../src/components";
 import {
   FragioAPI,
@@ -73,33 +74,29 @@ export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
     return u && u.id == localState.team.owner.id;
   }
 
-  function deleteMember(username: string) {
-    return api.deleteMember(localState.team.id, username).then(() => {
-      setLocalState({
-        ...localState,
-        members: localState.members.filter(member => member.user.username != username)
-      });
+  async function deleteMember(username: string) {
+    await api.deleteMember(localState.team.id, username);
+    setLocalState({
+      ...localState,
+      members: localState.members.filter(member => member.user.username != username)
     });
   }
 
-  function createMember(username: string) {
-    return api.createMember(localState.team.id, username)
-      .then(member => {
-        setLocalState({
-          ...localState,
-          members: localState.members.concat([member])
-        });
-      });
+  async function createMember(username: string) {
+    const member = await api.createMember(localState.team.id, username);
+    setLocalState({
+      ...localState,
+      members: localState.members.concat([member])
+    });
   }
 
-  function removeBoard(id: string) {
-    return api.updateBoard(id, {
+  async function removeBoard(id: string) {
+    await api.updateBoard(id, {
       teamId: null
-    }).then(() => {
-      setLocalState({
-        ...localState,
-        boards: localState.boards.filter(board => board.id != id)
-      });
+    });
+    setLocalState({
+      ...localState,
+      boards: localState.boards.filter(board => board.id != id)
     });
   }
 
@@ -402,10 +399,14 @@ export default function TeamPage({ match }: RouteComponentProps<{id: string}>) {
     );
   }
 
-  if (localState === null) {
+  if (localState.status == "LOADING") {
+    return (
+      <div className="text-center">
+        <Loading className="m-3 text-secondary"/>
+      </div>
+    );
+  } else if (localState.status == "ERROR") {
     return <div>Not Found</div>;
-  } else if (localState === undefined) {
-    return <div>Loading</div>;
   }
 
   return (

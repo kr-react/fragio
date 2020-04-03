@@ -60,9 +60,9 @@ export default function LoginRoute({ match }: RouteComponentProps<never>) {
       const data = new FormData(e.currentTarget);
 
       try {
-        const token = await api.getToken(data.get("username") as string, data.get("password") as string);
+        const info = await api.getToken(data.get("username") as string, data.get("password") as string);
         const remember = data.get("remember-me") == "remember";
-        api.token = token;
+        api.token = info.token;
         await login(remember ? "local" : "session");
       } catch (err) {
         return false;
@@ -125,12 +125,13 @@ export default function LoginRoute({ match }: RouteComponentProps<never>) {
     async function onSubmitHandler(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
       const data = new FormData(e.currentTarget);
-      api.token = await api.createAccount({
+      const info = await api.createAccount({
         name: data.get("name"),
         username: data.get("username"),
         email: data.get("email"),
         password: data.get("password")
       });
+      api.token = info.token;
 
       await login("session");
     }

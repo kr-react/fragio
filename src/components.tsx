@@ -41,6 +41,12 @@ interface IconProps {
   height: React.ReactText;
 }
 
+interface LoadingProps {
+  className?: string;
+  small?: boolean;
+  type?: "spinner" | "growing";
+}
+
 export function useSearch<T>(arr: T[], map: (_: T) => string) {
   const [state, setState] = React.useState(arr);
   const func = (text: string) => setState(arr.filter(item => {
@@ -63,6 +69,8 @@ export function useModal() {
       element.setAttribute("class", "modal fade");
       element.setAttribute("tabindex", "-1");
       element.setAttribute("role", "dialog");
+      element.setAttribute("data-backdrop", "static");
+      element.setAttribute("data-keyboard", "false");
 
       dialog.setAttribute("class", "modal-dialog");
       dialog.setAttribute("role", "document");
@@ -114,6 +122,30 @@ export function Icon(props: IconProps) {
       return <svg></svg>;
     };
   }
+}
+
+export function Loading(props: LoadingProps) {
+  let classes = props.className || "";
+
+  switch (props.type) {
+    case "growing":
+      classes += " spinner-grow"
+      break;
+  
+    default:
+      classes += " spinner-border"
+      break;
+  }
+
+  if (props.small) {
+    classes += "-sm";
+  }
+
+  return (
+    <div className={classes} role="status">
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
 }
 
 export function Sticky(props: StickyProps) {

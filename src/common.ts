@@ -148,6 +148,13 @@ export interface Activity {
   data: any;
 }
 
+interface AuthInfo {
+  id: string;
+  username: string;
+  token: string;
+  expiration: string;
+}
+
 interface ApiRequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   useToken?: boolean;
@@ -196,14 +203,14 @@ export class FragioAPI {
     });
   }
 
-  async createAccount(data: any) : Promise<string> {
+  async createAccount(data: any) : Promise<AuthInfo> {
     return this.request("api/v1/auth/new", {
       method: "POST",
       body: data
     });
   }
 
-  async getToken(username: string, password: string) : Promise<string> {
+  async getToken(username: string, password: string) : Promise<AuthInfo> {
     return this.request("api/v1/auth/auth", {
       method: "POST",
       body: {username, password}

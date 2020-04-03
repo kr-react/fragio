@@ -7,6 +7,7 @@ import {
   Team,
   FragioAPI,
 } from "../../../src/common";
+import { Loading } from "../../components";
 
 export default function NewBoardPage({ match }: RouteComponentProps<never>) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
@@ -65,7 +66,9 @@ export default function NewBoardPage({ match }: RouteComponentProps<never>) {
 
   if (localState === undefined) {
     return (
-      <span>Loading</span>
+      <div className="text-center">
+        <Loading className="m-3 text-secondary"/>
+      </div>
     );
   } else if (localState === null) {
     return (

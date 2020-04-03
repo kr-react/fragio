@@ -10,6 +10,7 @@ import {
   ActivityComponent,
   Icon,
   Footer,
+  Loading,
 } from "../../components";
 import {
   FragioAPI,
@@ -61,11 +62,6 @@ function getLabels(labels: Label[], card: Card) {
 
 function getUnusedLabels(labels: Label[], card: Card) {
     return labels.filter(label => !card.labelIds.includes(label.id));
-}
-
-function getUrlsFromString(str: string) {
-    const pattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
-    return pattern.exec(str) || [];
 }
 
 function getImagesFromString(str: string) {
@@ -1016,7 +1012,9 @@ export default function BoardPage({ match }: RouteComponentProps<{id: string}>) 
 
   if (localState.status == "LOADING") {
     return (
-      <span>Loading</span>
+      <div className="text-center">
+        <Loading className="m-3 text-secondary"/>
+      </div>
     );
   } else if (localState.status == "ERROR") {
     return (

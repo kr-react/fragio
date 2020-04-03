@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
+  Loading,
   ActivityComponent,
   Footer,
 } from "../../../src/components"
@@ -338,9 +339,13 @@ export default function UserPage({ match }: RouteComponentProps<{username: strin
     );
   }
 
-  if (localState === null) {
-    return <div>Not Found</div>;
-  } else if (localState === undefined) {
+  if (localState.status == "LOADING") {
+    return (
+      <div className="text-center">
+        <Loading className="m-3 text-secondary"/>
+      </div>
+    );
+  } else if (localState.status == "ERROR") {
     return <div>Loading</div>;
   }
 
