@@ -2,7 +2,12 @@ import * as React from "react";
 import { useSelector } from "react-redux";
 import { Link, Redirect, useHistory, RouteComponentProps } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { ActivityComponent, Loading, useSticky } from "../../../src/components";
+import { 
+  ActivityComponent,
+  Loading,
+  useSticky,
+  useSearch,
+} from "../../../src/components";
 import {
   ApplicationState,
   Board,
@@ -15,9 +20,10 @@ import {
 export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
   const { user, token } = useSelector<ApplicationState, ApplicationState>(state => state);
   const api = new FragioAPI(process.env.API_URL as string, token as string);
+
   const history = useHistory();
   const { t } = useTranslation();
-  const [leftPanelStickyRef, rightPanelStickyRef] = useSticky<HTMLDivElement>(2);
+  
   const [localState, setLocalState] = React.useState<{
     boards: Board[],
     teams: Team[],
@@ -31,10 +37,11 @@ export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
     activities: [],
     status: "LOADING",
   });
-  const [searchState, setSearchState] = React.useState({
-    board: "",
-    team: ""
-  });
+  
+  const {search: searchBoard, result: searchBoardResult} = useSearch(localState.boards, b => [b.name]);
+  const {search: searchTeam, result: searchTeamResult} = useSearch(localState.teams, t => [t.name]);
+
+  const [leftPanelStickyRef, rightPanelStickyRef] = useSticky<HTMLDivElement>(2);
 
   React.useEffect(() => {
     async function request() {
@@ -71,10 +78,6 @@ export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
     return <Redirect to="/landing"/>
   }
 
-  function includesIgnoreCase(str1: string, str2: string) {
-    return str1.toUpperCase().includes(str2.toUpperCase());
-  }
-
   if (localState.status == "LOADING") {
     return (
       <div className="text-center">
@@ -105,13 +108,12 @@ export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
               <input
                 type="text"
                 className="form-control"
-                value={searchState.board}
-                onChange={e => setSearchState({...searchState, board: e.currentTarget.value})}
+                onChange={e => searchBoard(e.currentTarget.value)}
                 placeholder={t("action.findBoard")}
                 aria-label="Board"/>
             </div>
             <div className="d-flex flex-column mt-2">
-              {localState.boards.filter(b => includesIgnoreCase(b.name, searchState.board)).map(board =>
+              {(searchBoardResult.length > 0 ? searchBoardResult : localState.boards).map(board =>
                 <Link
                   className="mt-2"
                   to={`board/${board.id}`}>
@@ -134,12 +136,11 @@ export default function HomePage({ match }: RouteComponentProps<{id: string}>) {
                 type="text"
                 className="form-control"
                 placeholder={t("action.findTeam")}
-                value={searchState.team}
-                onChange={e => setSearchState({...searchState, team: e.currentTarget.value})}
+                onChange={e => searchTeam(e.currentTarget.value)}
                 aria-label="Team"/>
             </div>
             <div className="d-flex flex-column mt-2">
-              {localState.teams.filter(t => includesIgnoreCase(t.name, searchState.team)).map(team =>
+              {(searchTeamResult.length > 0 ? searchTeamResult : localState.teams).map(team =>
                 <Link
                   className="mt-2"
                   to={`team/${team.id}`}>
