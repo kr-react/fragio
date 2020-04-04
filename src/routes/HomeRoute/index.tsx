@@ -58,7 +58,7 @@ export default function HomeRoute({ match }: RouteComponentProps<never>) {
                   {t("profile")}
                 </Link>
                 <div className="dropdown-divider"></div>
-                {i18n.languages.map(lang =>
+                {["en-US", "pt-BR"].map(lang =>
                   <span
                     className="dropdown-item pointer"
                     onClick={() => i18n.changeLanguage(lang)}>

@@ -448,7 +448,7 @@ export default function BoardPage({ match }: RouteComponentProps<{id: string}>) 
                   data-toggle="dropdown"
                   aria-haspopup="true"
                   aria-expanded="false">
-                  {t("action.new")}
+                  {t("action.add")}
                 </button>
                 <div
                   className="dropdown-menu shadow-sm"
