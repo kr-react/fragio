@@ -47,7 +47,7 @@ export default function HomeRoute({ match }: RouteComponentProps<never>) {
                   height="25"/>
               </div>
               <div
-                className="dropdown-menu shadow-sm"
+                className="dropdown-menu dropdown-menu-right shadow-sm"
                 aria-labelledby="userctl-dropdown-toggle"
                 style={{
                   zIndex: 2000
@@ -58,7 +58,7 @@ export default function HomeRoute({ match }: RouteComponentProps<never>) {
                   {t("profile")}
                 </Link>
                 <div className="dropdown-divider"></div>
-                {["en-US", "pt-BR"].map(lang =>
+                {ApplicationState.AvailableLanguages.map(lang =>
                   <span
                     className="dropdown-item pointer"
                     onClick={() => i18n.changeLanguage(lang)}>

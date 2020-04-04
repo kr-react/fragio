@@ -6,6 +6,8 @@ export interface ReduxAction {
 export class ApplicationState {
   token?: string;
   user?: User;
+
+  static AvailableLanguages = ["en-US", "pt-BR"];
 };
 
 export class QueryString {
