@@ -13,11 +13,9 @@ import { ApplicationState, ReduxAction } from "./common";
 import "bootstrap";
 import "./index.scss";
 
-// Routes
 import HomeRoute from "./routes/HomeRoute/";
 import LoginRoute from "./routes/LoginRoute/";
 
-// Redux Reducers
 function appReducer(state: ApplicationState = new ApplicationState, action: ReduxAction) {
   switch (action.type) {
     case "LOGIN": {

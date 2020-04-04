@@ -12,12 +12,12 @@ import NewTeamPage from "./NewTeamPage";
 import LandingPage from "./LandingPage";
 
 export default function HomeRoute({ match }: RouteComponentProps<never>) {
-  const { t } = useTranslation();
   const { user } = useSelector<ApplicationState, ApplicationState>(state => state);
+  const { i18n, t } = useTranslation();
   const dispatch = useDispatch();
 
   if (!user && (localStorage.getItem("token") || sessionStorage.getItem("token"))) {
-    return <Redirect to={`/login?location=${location.href.slice(location.origin.length)}`}/>
+    return <Redirect to={`/login?location=${location.pathname}`}/>
   }
 
   return (
@@ -57,6 +57,17 @@ export default function HomeRoute({ match }: RouteComponentProps<never>) {
                   to={`/user/${user.username}`}>
                   {t("profile")}
                 </Link>
+                <div className="dropdown-divider"></div>
+                {i18n.languages.map(lang =>
+                  <span
+                    className="dropdown-item pointer"
+                    onClick={() => i18n.changeLanguage(lang)}>
+                    {i18n.language == lang &&
+                      <b className="mr-2">·</b>
+                    }
+                    {t(`lang.${lang}`)}
+                  </span>
+                )}
                 <div className="dropdown-divider"></div>
                 <span
                   className="dropdown-item pointer"
@@ -101,5 +112,3 @@ export default function HomeRoute({ match }: RouteComponentProps<never>) {
     </div>
   );
 }
-
-// <Route exact path="/newteam" component={NewTeamPage}/>

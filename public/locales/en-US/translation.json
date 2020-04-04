@@ -106,5 +106,9 @@
     "card1": "Create a page on twitter",
     "card2": "Allow users to search for activities",
     "card3": "Prepare database maintenance"
+  },
+  "lang": {
+    "en": "English",
+    "en-US": "English (US)"
   }
 }
