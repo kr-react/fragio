@@ -50,7 +50,7 @@ module.exports = {
     new Webpack.DefinePlugin({
       'process.env': {
         MODE: process.env.NODE_ENV,
-        APP_NAME: JSON.stringify(process.env.APP_NAME),
+        APP_NAME: JSON.stringify("Fragio"),
         API_URL: JSON.stringify(process.env.API_URL),
         SOURCE_CODE_URL: JSON.stringify(process.env.SOURCE_CODE_URL),
         ROADMAP_URL: JSON.stringify(process.env.ROADMAP_URL)

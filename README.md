@@ -29,7 +29,6 @@ yarn start
 You might want to setup environment variables creating the ".env" file.
 
 ```
-APP_NAME=Fragio
 API_URL=API endpoint
 SOURCE_CODE_URL=Optional url to the source code
 ROADMAP_URL=Optional url to the application roadmap

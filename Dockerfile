@@ -17,7 +17,6 @@ RUN apt install -y nodejs golang-go yarn
 
 # Copy package.json and install
 COPY package.json ./
-RUN ls -a
 RUN yarn
 
 COPY . .
