@@ -14,6 +14,9 @@ Front-end code to the open source kanban app.
 # Clone repository
 git clone https://github.com/happotato/fragio.git
 
+# Change directory
+cd fragio
+
 # Install dependencies
 yarn install
 
