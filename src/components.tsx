@@ -320,6 +320,8 @@ export function ActivityComponent(props: ActivityComponentProps) {
             <img
               className="rounded mr-3"
               src={activity.user.imageUrl}
+              alt={activity.user.name}
+              loading="lazy"
               width="25"
               height="25"/>
           </Link>
@@ -363,6 +365,7 @@ export function ActivityComponent(props: ActivityComponentProps) {
                 className="rounded"
                 src={activity.user.imageUrl}
                 alt={activity.user.name}
+                loading="lazy"
                 width="35"
                 height="35"/>
             </Link>
